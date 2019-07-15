@@ -18,7 +18,11 @@ Gui, Add, Button, yp+25 w160 gQuit, Quit Editing
 Gui, Add, ListView, yp-235 xp+165 w375 h735 -Multi vClients, Name|Hostname|Username|Password
 
 Devices := New SQLiteDB
-Devices.OpenDB("devices.db")
+if !Devices.OpenDB("devices.db", "W", false)
+{
+  Devices.OpenDB("devices.db")
+  Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String);")
+}
 Devices.GetTable("SELECT * FROM tb_devices;", table)
 canIterate := true
 while (canIterate == true)
