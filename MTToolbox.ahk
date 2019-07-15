@@ -130,13 +130,17 @@ LogCommand(hostname, command, filename)
 ; Returns: None.
 BackupRouter(hostname)
 {
+  directory := "backups\"
+  ifNotExist, %directory%
+    FileCreateDir, %directory%
   Global Devices
   name := GetCreds("name", hostname)
   username := GetCreds("username", hostname)
   password := GetCreds("password", hostname)
   formattime, date, , MM-dd-yyyy_HH-mm
-  directory := "backups\" . name . "\"
-  FileCreateDir, %directory%
+  directory := directory . name . "\"
+  ifNotExist, %directory%
+    FileCreateDir, %directory%
   fileName := directory . date . ".txt"
   runCMD := "echo y  | plink.exe -ssh " . hostname . " -l " . username . " -pw " . password . " -m """ . "scripts/backup.txt" . """" " > " . """" . fileName . """"
   run, %comspec% /c %runCMD% ,,hide
