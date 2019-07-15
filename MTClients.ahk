@@ -21,7 +21,7 @@ Devices := New SQLiteDB
 Devices.OpenDB("devices.db")
 Devices.GetTable("SELECT * FROM tb_devices;", table)
 canIterate := true
-while (canIterate != -1)
+while (canIterate == true)
 {
   canIterate := table.Next(tableRow)
   name := tableRow[1]
@@ -45,6 +45,7 @@ Add:
   GuiControlGet, Username
   GuiControlGet, Password
   QUERY := "INSERT INTO tb_devices VALUES ('" . Name . "','" . Hostname . "','" . Username "','" . Password . "');"
+  MsgBox, %QUERY%
   if Devices.Exec(QUERY)
   {
     LV_Add(, Name, Hostname, Username, Password)

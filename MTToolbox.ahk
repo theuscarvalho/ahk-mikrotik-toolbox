@@ -27,12 +27,12 @@ if !FileExist("backupconfig.txt")
 Devices := New SQLiteDB
 if !Devices.OpenDB("devices.db", "W", false)
 {
-  Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String;")
   Devices.OpenDB("devices.db")
+  Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String);")
 }
 Devices.GetTable("SELECT * FROM tb_devices;", table)
 canIterate := true
-while (canIterate !=-1)
+while (canIterate == true)
 {
   canIterate := table.Next(tableRow)
   name := tableRow[1]
