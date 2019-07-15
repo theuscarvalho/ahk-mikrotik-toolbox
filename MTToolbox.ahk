@@ -18,12 +18,6 @@ Gui, Add, Button, yp+25 w120 gRouterOS, Update RouterOS
 Gui, Add, Button, yp+25 w120 gBackup, Run Manual Backup
 Gui, Add, Button, yp+25 w120 gReboot, Reboot
 Gui, Add, ListView, yp-135 xp+125 w335 h235, Name|Hostname
-if !FileExist("backupconfig.txt")
-{
-  MsgBox, Configuration file not found, it is now being created
-  newFile := FileOpen(backupconfig.txt, "w")
-  newFile.Close()
-}
 Devices := New SQLiteDB
 if !Devices.OpenDB("devices.db", "W", false)
 {
@@ -115,7 +109,7 @@ LogCommand(hostname, command, filename)
   FileCreateDir, %directory%
   fileName := directory . filename
   runCMD := "echo y  | plink.exe -ssh " . hostname . " -l " . username . " -pw " . password . " " . command . " > " . """" . fileName . """"
-  run, %comspec% /c %runCMD%
+  run, %comspec% /c %runCMD% ,,hide
 }
 
 BackupRouter(hostname)
@@ -129,7 +123,7 @@ BackupRouter(hostname)
   FileCreateDir, %directory%
   fileName := directory . date . ".txt"
   runCMD := "echo y  | plink.exe -ssh " . hostname . " -l " . username . " -pw " . password . " -m """ . "scripts/backup.txt" . """" " > " . """" . fileName . """"
-  run, %comspec% /c %runCMD%
+  run, %comspec% /c %runCMD% ,,hide
 }
 
 SingleCommand(hostname, command)
@@ -137,7 +131,7 @@ SingleCommand(hostname, command)
   username := GetCreds("username", hostname)
   password := GetCreds("password", hostname)
   runCMD := "echo y  | plink.exe -ssh " . hostname . " -l " . username . " -pw " . password . " " . command
-  run, %comspec% /c %runCMD%
+  run, %comspec% /c %runCMD% ,,hide
 }
 
 MultiCommand(hostname, filePath)
@@ -145,7 +139,7 @@ MultiCommand(hostname, filePath)
   username := GetCreds("username", hostname)
   password := GetCreds("password", hostname)
   runCMD := "echo y | plink.exe -ssh " . hostname . " -l " . username . " -pw " . password . " -m """ . filePath . """"
-  run, %comspec% /c %runCMD%
+  run, %comspec% /c %runCMD% ,,hide
 }
 
 Edit:
