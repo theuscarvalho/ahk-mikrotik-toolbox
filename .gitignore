@@ -1,0 +1,7 @@
+*.txt
+*.exe
+*.db
+*.dll
+*.def
+Class_SQLiteDB
+Class_SQLiteDB.ahk
