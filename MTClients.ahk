@@ -95,10 +95,13 @@ Retrieve:
   GuiControl,, Password, %password%
   return
 Import:
+  MsgBox, 4,, This will wipe your current database. Would you like to continue?
+    IfMsgBox No
+      return
   FileSelectFile, importTarget, 3
   QUERY := "DROP TABLE tb_devices;"
   Devices.Exec(QUERY)
-  Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String;")
+  Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String);")
   Loop, Read, %importTarget%
     {
       importArgs := StrSplit(A_LoopReadLine, ",")
@@ -112,7 +115,7 @@ Import:
     LV_Delete()
     Devices.GetTable("SELECT * FROM tb_devices;", table)
     canIterate := true
-    while (canIterate != -1)
+    while (canIterate = true)
     {
       canIterate := table.Next(tableRow)
       name := tableRow[1]
@@ -145,8 +148,8 @@ Export:
   return
 
 Quit:
-  run, "MTToolbox.ahk"
   Devices.CloseDB()
+  run, "MTToolbox.ahk"
   ExitApp
   return
 return
