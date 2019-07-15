@@ -1,6 +1,5 @@
 ; Author: Jonah Verner
 ; Organization: Lake Country Technology
-; Version: 0.1
 ; Database Structure
 ; Table: tb_devices
 ; Keys: Device Name, hostname, username, password
@@ -10,6 +9,16 @@
 SendMode Input
 SetWorkingDir %A_ScriptDir%
 
+;Opens database and creates a new one if it does not currently exist
+Devices := New SQLiteDB
+if !Devices.OpenDB("devices.db", "W", false)
+{
+  Devices.OpenDB("devices.db")
+  Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String);")
+}
+Devices.GetTable("SELECT * FROM tb_devices;", table)
+
+;Draw GUI
 Gui, Add, GroupBox, xp+6 yp+5 w470 h250, Commands
 Gui, Add, Button, xp+5 yp+20 w120 gEdit, Edit Clients
 Gui, Add, Button, yp+25 w120 gCommand, Run Command
@@ -18,13 +27,8 @@ Gui, Add, Button, yp+25 w120 gRouterOS, Update RouterOS
 Gui, Add, Button, yp+25 w120 gBackup, Run Manual Backup
 Gui, Add, Button, yp+25 w120 gReboot, Reboot
 Gui, Add, ListView, yp-135 xp+125 w335 h235, Name|Hostname
-Devices := New SQLiteDB
-if !Devices.OpenDB("devices.db", "W", false)
-{
-  Devices.OpenDB("devices.db")
-  Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String);")
-}
-Devices.GetTable("SELECT * FROM tb_devices;", table)
+
+;Loop to populate the listview
 canIterate := true
 while (canIterate == true)
 {
@@ -36,8 +40,10 @@ while (canIterate == true)
     LV_Add("", name, hostname)
   }
 }
-Global Args := []
 
+;The following loop and function handle processing of any command line flags.
+;Currently the only flag that is handled is -backup
+Global Args := []
 Loop, %0%
 	Args.Push(%A_Index%)
 
@@ -46,7 +52,6 @@ Loop %0%
 	If (ObjHasValue(Args, "-backup"))
 		AutoBackup()
 }
-
 ObjHasValue(Obj, Value, Ret := 0) {
 	For Key, Val in Obj {
 		If IsObject(Val) {
@@ -63,10 +68,12 @@ ObjHasValue(Obj, Value, Ret := 0) {
 	Return False
 }
 
+;Wait to draw GUI until after flags are processed
 Gui, Show,, MikroTik Toolbox
 LV_ModifyCol(1, "AutoHdr")
 return
 
+;Automatically backs up all devices and their /ip cloud info then exits the application
 AutoBackup()
 {
   Global Devices
@@ -89,6 +96,9 @@ AutoBackup()
   ExitApp
 }
 
+; Function GetCreds
+; Parameters: String type, String hostname. type must be a valid key in the database and hostname should be the hostname of a device in the database
+; Returns: String result. Will give whatever information is requested (username, password, etc.)
 GetCreds(type, hostname)
 {
   Global Devices
@@ -99,6 +109,9 @@ GetCreds(type, hostname)
   return result
 }
 
+; Function LogCommand. Executes a command on a MikroTik device and logs the output.
+; Parameters: String hostname, String command, String filename. filename must be a valid Windows File Name.
+; Returns: None.
 LogCommand(hostname, command, filename)
 {
   Global Devices
@@ -112,6 +125,9 @@ LogCommand(hostname, command, filename)
   run, %comspec% /c %runCMD% ,,hide
 }
 
+; Function BackupRouter. Backs up router using command stored in \scripts\backup.txt.
+; Parameters: String hostname
+; Returns: None.
 BackupRouter(hostname)
 {
   Global Devices
@@ -126,6 +142,9 @@ BackupRouter(hostname)
   run, %comspec% /c %runCMD% ,,hide
 }
 
+; Function SingleCommand. Runs a single command on a MikroTik without logging.
+; Parameters: String hostname, String command
+; Returns: None.
 SingleCommand(hostname, command)
 {
   username := GetCreds("username", hostname)
@@ -134,6 +153,9 @@ SingleCommand(hostname, command)
   run, %comspec% /c %runCMD% ,,hide
 }
 
+; Function MultiCommand. Runs series of commands determined by the contents of a file.
+; Parameters: String hostname, String filePath. filePath must be a path to a file, can be in relation to the working directory or a full path.
+; Returns: None.
 MultiCommand(hostname, filePath)
 {
   username := GetCreds("username", hostname)
