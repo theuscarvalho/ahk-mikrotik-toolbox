@@ -8,7 +8,8 @@ MSP oriented toolbox for managing Mikrotik routers and switches.
 ## Usage ##
 Command Line Flags:
 `-backup` - Automatically backs up all routers in the database using the commands found in /scripts/backup.txt
-(More will be added in the future)
+`-firmware` - Automatically updates the RouterBoard firmware of each router in the database
+`-ros` - Automatically updates all RouterOS packages on each router in the database and reboots
 
 GUI:
 Everything should be fairly self explanatory. The database import uses the format friendly_name,hostname,username,password with one device per line.
