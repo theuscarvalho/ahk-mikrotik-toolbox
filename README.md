@@ -6,10 +6,13 @@ MSP oriented toolbox for managing Mikrotik routers and switches.
 - [SQLite](https://www.sqlite.org/download.html)
 
 ## Usage ##
-For first time usage, you will have to import a database. My apologies, I just haven't gotten around to having it get automatically created quite yet. The format for doing so is a text file formatted with one device per line with the format friendlyname,hostname,username,password
+Command Line Flags:
+`-backup` - Automatically backs up all routers in the database using the commands found in /scripts/backup.txt
+(More will be added in the future)
 
-Importing is done through the edit clients script or by clicking edit clients in the toolbox script.
+GUI:
+Everything should be fairly self explanatory. The database import uses the format friendly_name,hostname,username,password with one device per line.
 
-Automatic backups can be done by using Windows task scheduler run the script with the flag `-backup`
-
-Other than that, things can pretty much explain themselves, and I will be putting more effort into documenting things as I go.
+## Screenshots ##
+![MTToolbox](https://i.imgur.com/EaJ7dHd.png)
+![Client Editing](https://i.imgur.com/k50qqrb.png)
