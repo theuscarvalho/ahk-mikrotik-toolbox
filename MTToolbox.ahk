@@ -51,8 +51,18 @@ Loop, %0%
 
 Loop %0%
 {
-	If (ObjHasValue(Args, "-backup"))
-		AutoBackup()
+  If (ObjHasValue(Args, "-backup"))
+  {
+		AutoRun("backup")
+  }
+  If (ObjHasValue(Args, "-firmware"))
+  {
+		AutoRun("firmware")
+  }
+  If (ObjHasValue(Args, "-ros"))
+  {
+		AutoRun("rOS")
+  }
 }
 ObjHasValue(Obj, Value, Ret := 0) {
 	For Key, Val in Obj {
@@ -76,11 +86,12 @@ LV_ModifyCol(1, "AutoHdr")
 return
 
 ;Automatically backs up all devices and their /ip cloud info then exits the application
-AutoBackup()
+AutoRun(command)
 {
   Global Devices
   Devices.GetTable("SELECT * FROM tb_devices;", table)
   canIterate := true
+  checkCommand := ""
   while (canIterate !=-1)
   {
     canIterate := table.Next(tableRow)
@@ -88,8 +99,24 @@ AutoBackup()
     hostname := tableRow[2]
     if name
     {
-      BackupRouter(hostname)
-      Sleep 200
+      checkCommand := "backup"
+      if (%command% = %checkCommand%)
+      {
+        BackupRouter(hostname)
+        Sleep 200
+      }
+      checkCommand := "firmware"
+      if (%command% = %checkCommand%)
+      {
+        SingleCommand(hostname, "/system routerboard upgrade")
+        Sleep 200
+      }
+      checkCommand := "rOS"
+      if (%command% = %checkCommand%)
+      {
+        SingleCommand(hostname, "/system package update install")
+        Sleep 200
+      }
     }
     Loop
     {
