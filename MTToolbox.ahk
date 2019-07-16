@@ -87,6 +87,9 @@ AutoBackup()
     if name
     {
       BackupRouter(hostname)
+      formattime, date, , MM-dd-yyyy_HH-mm
+      cloudFile := "CloudPrint_" . date . ".txt"
+      LogCommand(hostname, "/ip cloud print", cloudFile)
     }
   }
   Devices.CloseDB()
@@ -131,8 +134,6 @@ BackupRouter(hostname)
   ifNotExist, %directory%
     FileCreateDir, %directory%
   Global Devices
-  commands := "scripts/backup.txt"
-  bufferDir := "buffer"
   name := GetCreds("name", hostname)
   username := GetCreds("username", hostname)
   password := GetCreds("password", hostname)
@@ -140,25 +141,9 @@ BackupRouter(hostname)
   directory := directory . name . "\"
   ifNotExist, %directory%
     FileCreateDir, %directory%
-  ifNotExist, %bufferDir%
-    FileCreateDir, %bufferDir%
   fileName := directory . date . ".txt"
-  line := 1
-  Loop, read, %commands%
-  {
-    bufferFile := "\" . bufferDir . line . ".txt"
-    runCMD := "echo y  | plink.exe -ssh " . hostname . " -l " . username . " -pw " . password . " " . A_LoopReadLine . " > " . """" . bufferFile . """"
-    run, %comspec% /c %runCMD% ,,hide
-    line++
-  }
-  Loop, %bufferDir%\*.txt, , 0 ;Find all txt files, do not include subfolders
-  {
-	  Loop, read, %A_LoopFileFullPath%, %fileName% ;Read each file
-		  {
-			  FileAppend, %A_LoopReadLine%`n
-		  }
-  }
-  FileDelete, %bufferDir%\*.txt
+  runCMD := "echo y  | plink.exe -ssh " . hostname . " -l " . username . " -pw " . password . " -m """ . "scripts/backup.txt" . """" " > " . """" . fileName . """"
+  run, %comspec% /c %runCMD% ,,hide
 }
 
 ; Function SingleCommand. Runs a single command on a MikroTik without logging.
