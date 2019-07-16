@@ -141,20 +141,20 @@ GetCreds(type, hostname)
   return result
 }
 
-; Function LogCommand. Executes a command on a MikroTik device and logs the output.
-; Parameters: String hostname, String command, String filename. filename must be a valid Windows File Name.
-; Returns: None.
-LogCommand(hostname, command, filename)
+; Function ClearBuffer. Deletes the contents of the buffer folder.
+; Parameters: String directory
+; Returns: Boolean. True if directory deleted false if not deleted.
+ClearBuffer(directory)
 {
-  Global Devices
-  name := GetCreds("name", hostname)
-  username := GetCreds("username", hostname)
-  password := GetCreds("password", hostname)
-  directory := "backups\" . name . "\"
-  FileCreateDir, %directory%
-  fileName := directory . filename
-  runCMD := "echo y  | plink.exe -ssh " . hostname . " -l " . username . " -pw " . password . " " . command . " > " . """" . fileName . """"
-  run, %comspec% /c %runCMD% ,,hide
+  try
+  {
+    FileRemoveDir, %directory%, 1
+  }
+  catch 1
+  {
+    return false
+  }
+  return true
 }
 
 ; Function BackupRouter. Backs up router using command stored in \scripts\backup.txt.
@@ -181,6 +181,22 @@ BackupRouter(hostname)
       break
   }
   return %buffer%
+}
+
+; Function LogCommand. Executes a command on a MikroTik device and logs the output.
+; Parameters: String hostname, String command, String filename. filename must be a valid Windows File Name.
+; Returns: None.
+LogCommand(hostname, command, filename)
+{
+  Global Devices
+  name := GetCreds("name", hostname)
+  username := GetCreds("username", hostname)
+  password := GetCreds("password", hostname)
+  directory := "backups\" . name . "\"
+  FileCreateDir, %directory%
+  fileName := directory . filename
+  runCMD := "echo y  | plink.exe -ssh " . hostname . " -l " . username . " -pw " . password . " " . command . " > " . """" . fileName . """"
+  run, %comspec% /c %runCMD% ,,hide
 }
 
 ; Function LogMultiCommand
@@ -228,22 +244,6 @@ LogMultiCommand(hostname, saveTarget, commandFile)
   ClearBuffer(buffer)
   logMultiRunning := false
   return
-}
-
-; Function ClearBuffer. Deletes the contents of the buffer folder.
-; Parameters: String directory
-; Returns: Boolean. True if directory deleted false if not deleted.
-ClearBuffer(directory)
-{
-  try
-  {
-    FileRemoveDir, %directory%, 1
-  }
-  catch 1
-  {
-    return false
-  }
-  return true
 }
 
 ; Function SingleCommand. Runs a single command on a MikroTik without logging.
