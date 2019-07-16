@@ -88,9 +88,16 @@ AutoBackup()
     if name
     {
       BackupRouter(hostname)
-      formattime, date, , MM-dd-yyyy_HH-mm
-      cloudFile := "CloudPrint_" . date . ".txt"
-      LogCommand(hostname, "/ip cloud print", cloudFile)
+    }
+    Loop
+    {
+	    Process, Exist, plink.exe ; check to see if AutoHotkey.exe is running
+		  {
+		    If ! errorLevel
+			  {
+			    Sleep 500
+			  }
+		  }
     }
   }
   Devices.CloseDB()
