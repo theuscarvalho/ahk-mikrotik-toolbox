@@ -49,7 +49,6 @@ Add:
   GuiControlGet, Username
   GuiControlGet, Password
   QUERY := "INSERT INTO tb_devices VALUES ('" . Name . "','" . Hostname . "','" . Username "','" . Password . "');"
-  MsgBox, %QUERY%
   if Devices.Exec(QUERY)
   {
     LV_Add(, Name, Hostname, Username, Password)

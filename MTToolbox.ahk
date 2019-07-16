@@ -148,7 +148,6 @@ BackupRouter(hostname)
   {
     bufferFile := "\" . bufferDir . line . ".txt"
     runCMD := "echo y  | plink.exe -ssh " . hostname . " -l " . username . " -pw " . password . " " . A_LoopReadLine . " > " . """" . bufferFile . """"
-    MsgBox, %runCMD%
     run, %comspec% /c %runCMD% ,,hide
     line++
   }
