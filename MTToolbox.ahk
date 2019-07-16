@@ -44,6 +44,7 @@ while (canIterate == true)
 
 ;The following loop and function handle processing of any command line flags.
 ;Currently the only flag that is handled is -backup
+backupRunning := false
 Global Args := []
 Loop, %0%
 	Args.Push(%A_Index%)
@@ -91,13 +92,8 @@ AutoBackup()
     }
     Loop
     {
-	    Process, Exist, plink.exe ; check to see if AutoHotkey.exe is running
-		  {
-		    If ! errorLevel
-			  {
-			    Sleep 500
-			  }
-		  }
+	    if !backupRunning
+        break
     }
   }
   Devices.CloseDB()
@@ -135,23 +131,75 @@ LogCommand(hostname, command, filename)
 
 ; Function BackupRouter. Backs up router using command stored in \scripts\backup.txt.
 ; Parameters: String hostname
-; Returns: None.
+; Returns: String. Contains buffer directory used for clearing later
 BackupRouter(hostname)
 {
+  Global backupRunning
+  backupRunning := true
   directory := "backups\"
+  commands := "scripts/backup.txt"
+  buffer := "buffer\"
   ifNotExist, %directory%
     FileCreateDir, %directory%
-  Global Devices
+  ifNotExist, %buffer%
+    FileCreateDir, %buffer%
   name := GetCreds("name", hostname)
   username := GetCreds("username", hostname)
   password := GetCreds("password", hostname)
-  formattime, date, , MM-dd-yyyy_HH-mm
+  formattime, date, , MM-dd-yyyy_HHmm
   directory := directory . name . "\"
   ifNotExist, %directory%
     FileCreateDir, %directory%
   fileName := directory . date . ".txt"
-  runCMD := "echo y  | plink.exe -ssh " . hostname . " -l " . username . " -pw " . password . " -m """ . "scripts/backup.txt" . """" " > " . """" . fileName . """"
-  run, %comspec% /c %runCMD% ,,hide
+  line := 1
+  Loop, read, %commands%
+  {
+    bufferFile := buffer . line . ".txt"
+    runCMD := "echo y  | plink.exe -ssh " . hostname . " -l " . username . " -pw " . password . " " . A_LoopReadLine . " > " . """" . bufferFile . """"
+    run, %comspec% /c %runCMD% ,,hide
+    line++
+  }
+  Loop
+  {
+    Process, Exist, cmd.exe
+    {
+      If ! errorLevel
+      {
+        break
+      }
+      else
+      {
+        Sleep 500
+      }
+    }
+  }
+  filesToSearch := buffer . "*.txt"
+  Loop, Files, %filesToSearch% ;Find all txt files, do not include subfolders
+  {
+	  Loop, read, %A_LoopFileFullPath%, %fileName% ;Read each file
+		  {
+			  FileAppend, %A_LoopReadLine%`n
+		  }
+  }
+  ClearBuffer(buffer)
+  backupRunning := false
+  return %buffer%
+}
+
+; Function ClearBuffer. Deletes the contents of the buffer folder.
+; Parameters: String directory
+; Returns: Boolean. True if directory deleted false if not deleted.
+ClearBuffer(directory)
+{
+  try
+  {
+    FileRemoveDir, %directory%, 1
+  }
+  catch 1
+  {
+    return false
+  }
+  return true
 }
 
 ; Function SingleCommand. Runs a single command on a MikroTik without logging.
