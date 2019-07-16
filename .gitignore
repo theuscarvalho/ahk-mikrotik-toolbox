@@ -1,4 +1,5 @@
 /backups
+/buffer
 *.exe
 *.db
 *.dll
