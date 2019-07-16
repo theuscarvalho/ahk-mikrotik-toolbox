@@ -44,7 +44,7 @@ while (canIterate == true)
 
 ;The following loop and function handle processing of any command line flags.
 ;Currently the only flag that is handled is -backup
-backupRunning := false
+logMultiRunning := false
 Global Args := []
 Loop, %0%
 	Args.Push(%A_Index%)
@@ -89,10 +89,11 @@ AutoBackup()
     if name
     {
       BackupRouter(hostname)
+      Sleep 200
     }
     Loop
     {
-	    if !backupRunning
+	    if !logMultiRunning
         break
     }
   }
@@ -134,25 +135,41 @@ LogCommand(hostname, command, filename)
 ; Returns: String. Contains buffer directory used for clearing later
 BackupRouter(hostname)
 {
-  Global backupRunning
-  backupRunning := true
   directory := "backups\"
   commands := "scripts/backup.txt"
-  buffer := "buffer\"
   ifNotExist, %directory%
     FileCreateDir, %directory%
-  ifNotExist, %buffer%
-    FileCreateDir, %buffer%
   name := GetCreds("name", hostname)
-  username := GetCreds("username", hostname)
-  password := GetCreds("password", hostname)
+
   formattime, date, , MM-dd-yyyy_HHmm
   directory := directory . name . "\"
   ifNotExist, %directory%
     FileCreateDir, %directory%
   fileName := directory . date . ".txt"
+  LogMultiCommand(hostname, fileName, commands)
+  Sleep 200
+  Loop
+  {
+    if !logMultiRunning
+      break
+  }
+  return %buffer%
+}
+
+; Function LogMultiCommand
+; Parameters: String hostname, String saveTarget, String commandFile
+; Returns: None
+LogMultiCommand(hostname, saveTarget, commandFile)
+{
+  Global logMultiRunning
+  logMultiRunning := true
+  username := GetCreds("username", hostname)
+  password := GetCreds("password", hostname)
+  buffer := "buffer\"
+  ifNotExist, %buffer%
+    FileCreateDir, %buffer%
   line := 1
-  Loop, read, %commands%
+  Loop, read, %commandFile%
   {
     bufferFile := buffer . line . ".txt"
     runCMD := "echo y  | plink.exe -ssh " . hostname . " -l " . username . " -pw " . password . " " . A_LoopReadLine . " > " . """" . bufferFile . """"
@@ -176,14 +193,14 @@ BackupRouter(hostname)
   filesToSearch := buffer . "*.txt"
   Loop, Files, %filesToSearch% ;Find all txt files, do not include subfolders
   {
-	  Loop, read, %A_LoopFileFullPath%, %fileName% ;Read each file
-		  {
-			  FileAppend, %A_LoopReadLine%`n
-		  }
+    Loop, read, %A_LoopFileFullPath%, %saveTarget% ;Read each file
+      {
+        FileAppend, %A_LoopReadLine%`n
+      }
   }
   ClearBuffer(buffer)
-  backupRunning := false
-  return %buffer%
+  logMultiRunning := false
+  return
 }
 
 ; Function ClearBuffer. Deletes the contents of the buffer folder.
