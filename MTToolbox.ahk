@@ -44,14 +44,25 @@ while (canIterate == true)
 
 ;The following loop and function handle processing of any command line flags.
 ;Currently the only flag that is handled is -backup
+logMultiRunning := false
 Global Args := []
 Loop, %0%
 	Args.Push(%A_Index%)
 
 Loop %0%
 {
-	If (ObjHasValue(Args, "-backup"))
-		AutoBackup()
+  If (ObjHasValue(Args, "-backup"))
+  {
+		AutoRun("backup")
+  }
+  If (ObjHasValue(Args, "-firmware"))
+  {
+		AutoRun("firmware")
+  }
+  If (ObjHasValue(Args, "-ros"))
+  {
+		AutoRun("rOS")
+  }
 }
 ObjHasValue(Obj, Value, Ret := 0) {
 	For Key, Val in Obj {
@@ -75,11 +86,12 @@ LV_ModifyCol(1, "AutoHdr")
 return
 
 ;Automatically backs up all devices and their /ip cloud info then exits the application
-AutoBackup()
+AutoRun(command)
 {
   Global Devices
   Devices.GetTable("SELECT * FROM tb_devices;", table)
   canIterate := true
+  checkCommand := ""
   while (canIterate !=-1)
   {
     canIterate := table.Next(tableRow)
@@ -87,10 +99,29 @@ AutoBackup()
     hostname := tableRow[2]
     if name
     {
-      BackupRouter(hostname)
-      formattime, date, , MM-dd-yyyy_HH-mm
-      cloudFile := "CloudPrint_" . date . ".txt"
-      LogCommand(hostname, "/ip cloud print", cloudFile)
+      checkCommand := "backup"
+      if (%command% = %checkCommand%)
+      {
+        BackupRouter(hostname)
+        Sleep 200
+      }
+      checkCommand := "firmware"
+      if (%command% = %checkCommand%)
+      {
+        SingleCommand(hostname, "/system routerboard upgrade")
+        Sleep 200
+      }
+      checkCommand := "rOS"
+      if (%command% = %checkCommand%)
+      {
+        SingleCommand(hostname, "/system package update install")
+        Sleep 200
+      }
+    }
+    Loop
+    {
+	    if !logMultiRunning
+        break
     }
   }
   Devices.CloseDB()
@@ -110,6 +141,48 @@ GetCreds(type, hostname)
   return result
 }
 
+; Function ClearBuffer. Deletes the contents of the buffer folder.
+; Parameters: String directory
+; Returns: Boolean. True if directory deleted false if not deleted.
+ClearBuffer(directory)
+{
+  try
+  {
+    FileRemoveDir, %directory%, 1
+  }
+  catch 1
+  {
+    return false
+  }
+  return true
+}
+
+; Function BackupRouter. Backs up router using command stored in \scripts\backup.txt.
+; Parameters: String hostname
+; Returns: String. Contains buffer directory used for clearing later
+BackupRouter(hostname)
+{
+  directory := "backups\"
+  commands := "scripts/backup.txt"
+  ifNotExist, %directory%
+    FileCreateDir, %directory%
+  name := GetCreds("name", hostname)
+
+  formattime, date, , MM-dd-yyyy_HHmm
+  directory := directory . name . "\"
+  ifNotExist, %directory%
+    FileCreateDir, %directory%
+  fileName := directory . date . ".txt"
+  LogMultiCommand(hostname, fileName, commands)
+  Sleep 200
+  Loop
+  {
+    if !logMultiRunning
+      break
+  }
+  return %buffer%
+}
+
 ; Function LogCommand. Executes a command on a MikroTik device and logs the output.
 ; Parameters: String hostname, String command, String filename. filename must be a valid Windows File Name.
 ; Returns: None.
@@ -126,25 +199,51 @@ LogCommand(hostname, command, filename)
   run, %comspec% /c %runCMD% ,,hide
 }
 
-; Function BackupRouter. Backs up router using command stored in \scripts\backup.txt.
-; Parameters: String hostname
-; Returns: None.
-BackupRouter(hostname)
+; Function LogMultiCommand
+; Parameters: String hostname, String saveTarget, String commandFile
+; Returns: None
+LogMultiCommand(hostname, saveTarget, commandFile)
 {
-  directory := "backups\"
-  ifNotExist, %directory%
-    FileCreateDir, %directory%
-  Global Devices
-  name := GetCreds("name", hostname)
+  Global logMultiRunning
+  logMultiRunning := true
   username := GetCreds("username", hostname)
   password := GetCreds("password", hostname)
-  formattime, date, , MM-dd-yyyy_HH-mm
-  directory := directory . name . "\"
-  ifNotExist, %directory%
-    FileCreateDir, %directory%
-  fileName := directory . date . ".txt"
-  runCMD := "echo y  | plink.exe -ssh " . hostname . " -l " . username . " -pw " . password . " -m """ . "scripts/backup.txt" . """" " > " . """" . fileName . """"
-  run, %comspec% /c %runCMD% ,,hide
+  buffer := "buffer\"
+  ifNotExist, %buffer%
+    FileCreateDir, %buffer%
+  line := 1
+  Loop, read, %commandFile%
+  {
+    bufferFile := buffer . line . ".txt"
+    runCMD := "echo y  | plink.exe -ssh " . hostname . " -l " . username . " -pw " . password . " " . A_LoopReadLine . " > " . """" . bufferFile . """"
+    run, %comspec% /c %runCMD% ,,hide
+    line++
+  }
+  Loop
+  {
+    Process, Exist, cmd.exe
+    {
+      If ! errorLevel
+      {
+        break
+      }
+      else
+      {
+        Sleep 500
+      }
+    }
+  }
+  filesToSearch := buffer . "*.txt"
+  Loop, Files, %filesToSearch% ;Find all txt files, do not include subfolders
+  {
+    Loop, read, %A_LoopFileFullPath%, %saveTarget% ;Read each file
+      {
+        FileAppend, %A_LoopReadLine%`n
+      }
+  }
+  ClearBuffer(buffer)
+  logMultiRunning := false
+  return
 }
 
 ; Function SingleCommand. Runs a single command on a MikroTik without logging.
