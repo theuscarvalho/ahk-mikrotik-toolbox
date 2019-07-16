@@ -26,7 +26,8 @@ Gui, Add, Button, yp+25 w120 gFirmware, Update Firmware
 Gui, Add, Button, yp+25 w120 gRouterOS, Update RouterOS
 Gui, Add, Button, yp+25 w120 gBackup, Run Manual Backup
 Gui, Add, Button, yp+25 w120 gReboot, Reboot
-Gui, Add, ListView, yp-135 xp+125 w335 h235, Name|Hostname
+Gui, Add, Button, yp+25 w120 gWinbox, Winbox Session
+Gui, Add, ListView, yp-160 xp+125 w335 h235, Name|Hostname
 
 ;Loop to populate the listview
 canIterate := true
@@ -249,6 +250,21 @@ loop % LV_GetCount("S")
   RowNumber := LV_GetNext(RowNumber)
   LV_GetText(hostname, RowNumber, 2)
   SingleCommand(hostname, "/system reboot")
+}
+return
+winbox:
+loop % LV_GetCount("S")
+{
+  if not RowNumber
+  {
+    Rownumber := 0
+  }
+  RowNumber := LV_GetNext(RowNumber)
+  LV_GetText(hostname, RowNumber, 2)
+  username := GetCreds("username", hostname)
+  password := GetCreds("password", hostname)
+  runCMD := "winbox " . hostname . " " . username . " " . password
+  run, %comspec% /c %runCMD% ,,hide
 }
 return
 
