@@ -12,10 +12,8 @@ Gui, Add, Button, yp+25 r1 w160 gAdd, Add Client
 Gui, Add, Button, yp+25 w160 gUpdate, Update Config
 Gui, Add, Button, yp+25 w160 gDelete, Delete Client
 Gui, Add, Button, yp+25 w160 gRetrieve, Retrieve Selected
-Gui, Add, Button, yp+25 w160 gImport, Import Clients
-Gui, Add, Button, yp+25 w160 gExport, Export Clients
 Gui, Add, Button, yp+25 w160 gQuit, Quit Editing
-Gui, Add, ListView, yp-235 xp+165 w375 h735 -Multi vClients, Name|Hostname|Username|Password
+Gui, Add, ListView, yp-185 xp+165 w375 h735 -Multi vClients, Name|Hostname|Username|Password
 
 Devices := New SQLiteDB
 if !Devices.OpenDB("devices.db", "W", false)
@@ -92,58 +90,6 @@ Retrieve:
   GuiControl,, Hostname, %hostname%
   GuiControl,, Username, %username%
   GuiControl,, Password, %password%
-  return
-Import:
-  MsgBox, 4,, This will wipe your current database. Would you like to continue?
-    IfMsgBox No
-      return
-  FileSelectFile, importTarget, 3
-  QUERY := "DROP TABLE tb_devices;"
-  Devices.Exec(QUERY)
-  Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String, tier String, manufacturer String, os String, firmware String, zip String, contactname String, contactemail String, bstatus String, model String);")
-  Loop, Read, %importTarget%
-    {
-      importArgs := StrSplit(A_LoopReadLine, ",")
-      name := "'" . importArgs[1] . "'"
-      hostname := "'" . importArgs[2] . "'"
-      username := "'" . importArgs[3] . "'"
-      password := "'" . importArgs[4] . "'"
-      SQL := "INSERT INTO tb_devices VALUES (" . name . "," . hostname . "," . username . "," . password . ");"
-      import := Devices.Exec(SQL)
-    }
-    LV_Delete()
-    Devices.GetTable("SELECT * FROM tb_devices;", table)
-    canIterate := true
-    while (canIterate = true)
-    {
-      canIterate := table.Next(tableRow)
-      name := tableRow[1]
-      hostname := tableRow[2]
-      username := tableRow[3]
-      password := tableRow[4]
-      if name
-      {
-        LV_Add("", name, hostname, username, password)
-      }
-    }
-    return
-Export:
-  FileSelectFile, exportTarget, S
-  Devices.GetTable("SELECT * FROM tb_devices;", table)
-  canIterate := true
-  while (canIterate != -1)
-  {
-    canIterate := table.Next(tableRow)
-    name := tableRow[1]
-    hostname := tableRow[2]
-    username := tableRow[3]
-    password := tableRow[4]
-    row := name . "," . hostname . "," . username . "," . password . "`n"
-    if name
-    {
-      FileAppend, %row%, %exportTarget%
-    }
-  }
   return
 
 Quit:
