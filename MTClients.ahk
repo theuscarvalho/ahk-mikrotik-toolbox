@@ -21,7 +21,7 @@ Devices := New SQLiteDB
 if !Devices.OpenDB("devices.db", "W", false)
 {
   Devices.OpenDB("devices.db")
-  Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String);")
+  Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String, tier String, manufacturer String, os String, firmware String, zip String, contactname String, contactemail String, bstatus String, model String);")
 }
 Devices.GetTable("SELECT * FROM tb_devices;", table)
 canIterate := true
@@ -100,7 +100,7 @@ Import:
   FileSelectFile, importTarget, 3
   QUERY := "DROP TABLE tb_devices;"
   Devices.Exec(QUERY)
-  Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String);")
+  Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String, tier String, manufacturer String, os String, firmware String, zip String, contactname String, contactemail String, bstatus String, model String);")
   Loop, Read, %importTarget%
     {
       importArgs := StrSplit(A_LoopReadLine, ",")

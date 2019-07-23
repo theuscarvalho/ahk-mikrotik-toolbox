@@ -2,7 +2,7 @@
 ; Organization: Lake Country Technology
 ; Database Structure
 ; Table: tb_devices
-; Keys: Device Name, hostname, username, password
+; Keys: Device Name, hostname, username, password, tier, manufacturer, OS Version, Firmware Version, zip code, contact name, contact email, last backup status, model number
 
 #Include Class_SQLiteDB.ahk
 #NoEnv
@@ -14,7 +14,7 @@ Devices := New SQLiteDB
 if !Devices.OpenDB("devices.db", "W", false)
 {
   Devices.OpenDB("devices.db")
-  Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String);")
+  Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String, tier String, manufacturer String, os String, firmware String, zip String, contactname String, contactemail String, bstatus String, model String);")
 }
 Devices.GetTable("SELECT * FROM tb_devices;", table)
 
