@@ -62,10 +62,14 @@ Add:
   GuiControlGet, Hostname
   GuiControlGet, Username
   GuiControlGet, Password
-  QUERY := "INSERT INTO tb_devices VALUES ('" . Name . "','" . Hostname . "','" . Username "','" . Password . "');"
+  GuiControlGet, Tier
+  GuiControlGet, Zip
+  GuiControlGet, ContactName
+  GuiControlGet, ContactEmail
+  QUERY := "INSERT INTO tb_devices VALUES ('" . Name . "','" . Hostname . "','" . Username . "','" . Password . "','" . Tier . "','MikroTik', '0', '0', '" . Zip . "', '" . ContactName . "', '" . ContactEmail . "', 'fail', '0');"
   if Devices.Exec(QUERY)
   {
-    LV_Add(, Name, Hostname, Username, Password)
+    LV_Add(, Name, Hostname, Username, Password, Tier, Zip, ContactName, ContactEmail)
   }
   return
 
@@ -104,12 +108,12 @@ Update:
   Devices.Exec(QUERY)
   LV_Modify(row,"",newName,oldhostname,NewUsername,newPassword,newTier,newZip,newContactName,newContactEmail)
 Delete:
-  row:= LV_GetNext()
-  LV_GetText(DelHostname, RowNumber, 2)
+  row := LV_GetNext()
+  LV_GetText(DelHostname, row, 2)
   QUERY := "DELETE FROM tb_devices WHERE hostname='" . DelHostname . "';"
   if (Devices.Exec(QUERY))
   {
-    LV_Delete(RowNumber)
+    LV_Delete(row)
   }
   return
 Retrieve:
