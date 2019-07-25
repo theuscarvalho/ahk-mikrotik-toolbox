@@ -43,7 +43,6 @@ while (canIterate == true)
 }
 
 ;The following loop and function handle processing of any command line flags.
-;Currently the only flag that is handled is -backup
 logMultiRunning := false
 Global Args := []
 Loop, %0%
@@ -197,6 +196,7 @@ LogCommand(hostname, command, filename)
   fileName := directory . filename
   runCMD := "echo y  | plink.exe -ssh " . hostname . " -l " . username . " -pw " . password . " " . command . " > " . """" . fileName . """"
   run, %comspec% /c %runCMD% ,,hide
+  return
 }
 
 ; Function LogMultiCommand
