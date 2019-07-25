@@ -84,7 +84,54 @@ if (SourceLegacy)
 }
 else if (SourceOne)
 {
-  MsgBox, DB Version 1 is the latest scheme, no need to convert.
+  if (TargetOne)
+  {
+    MsgBox, You cannot convert the database to the same scheme as source.
+  }
+  else if (TargetLegacy)
+  {
+    MsgBox, 4,, Are you sure you want to downgrade your database version?
+      IfMsgBox No
+        return
+    Devices := New SQLiteDB
+    if !Devices.OpenDB("devices.db", "W", false)
+    {
+      MsgBox, Database not found. Cancelling conversion.
+      return
+    }
+    Devices.GetTable("SELECT * FROM tb_devices;", table)
+    canIterate := true
+    while (canIterate == true)
+    {
+      canIterate := table.Next(tableRow)
+      name := tableRow[1]
+      hostname := tableRow[2]
+      username := tableRow[3]
+      password := tableRow[4]
+      row := name . "," . hostname . "," . username . "," . password . "`n"
+      if name
+      {
+        FileAppend, %row%, conversionbuffer.txt
+      }
+    }
+    ifNotExist, conversionbuffer.txt
+      MsgBox, Buffer creation failed, aborting!
+    ifNotExist, conversionbuffer.txt
+      return
+    QUERY := "DROP TABLE tb_devices;"
+    Devices.Exec(QUERY)
+    Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String);")
+    Loop, Read, conversionbuffer.txt
+      {
+        importArgs := StrSplit(A_LoopReadLine, ",")
+        name := "'" . importArgs[1] . "'"
+        hostname := "'" . importArgs[2] . "'"
+        username := "'" . importArgs[3] . "'"
+        password := "'" . importArgs[4] . "'"
+        SQL := "INSERT INTO tb_devices VALUES (" . name . "," . hostname . "," . username . "," . password . ");"
+        import := Devices.Exec(SQL)
+      }
+  }
 }
 else MsgBox, Unexpected error!
 ifExist, conversionbuffer.txt
