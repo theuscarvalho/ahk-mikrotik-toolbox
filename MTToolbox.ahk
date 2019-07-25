@@ -127,6 +127,28 @@ AutoRun(command)
   ExitApp
 }
 
+; Function CheckAlive
+; Parameters: String hostname, String name
+; Returns: Boolean alive
+CheckAlive(hostname, name)
+{
+  alive := false
+  runCMD := "ping " . hostname . " >> ""buffer\" . name . ".txt"""
+  run, %comspec% /c %runCMD% ,,hide
+  Sleep 5000
+  fileName := "buffer\" . name . ".txt"
+  patternSearch := "time="
+  Loop, read, %fileName%
+  {
+    IfInString, A_LoopReadLine, %patternSearch%
+    {
+      alive := true
+    }
+  }
+  FileDelete, %fileName%
+  return alive
+}
+
 ; Function GetCreds
 ; Parameters: String type, String hostname. type must be a valid key in the database and hostname should be the hostname of a device in the database
 ; Returns: String result. Will give whatever information is requested (username, password, etc.)
