@@ -68,7 +68,8 @@ if (SourceLegacy)
       return
     QUERY := "DROP TABLE tb_devices;"
     Devices.Exec(QUERY)
-    Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String, tier String, manufacturer String, os String, firmware String, zip String, contactname String, contactemail String, bstatus String, model String, port String, bGroup String);")
+    Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String, tier String, manufacturer String, os String, firmware String, zip String, contactname String, contactemail String, bstatus String, model String, port String, bGroup String, uid String);")
+    uid := 1
     Loop, Read, conversionbuffer.txt
       {
         importArgs := StrSplit(A_LoopReadLine, ",")
@@ -76,8 +77,9 @@ if (SourceLegacy)
         hostname := "'" . importArgs[2] . "'"
         username := "'" . importArgs[3] . "'"
         password := "'" . importArgs[4] . "'"
-        SQL := "INSERT INTO tb_devices VALUES (" . name . "," . hostname . "," . username . "," . password . ", '0', 'MikroTik', '0', '0', '0', 'John Doe', 'null@null', 'fail', '0', '22', 'none');"
+        SQL := "INSERT INTO tb_devices VALUES (" . name . "," . hostname . "," . username . "," . password . ", '0', 'MikroTik', '0', '0', '0', 'John Doe', 'null@null', 'fail', '0', '22', 'none', '" . uid . "');"
         import := Devices.Exec(SQL)
+        uid++
       }
   }
   else MsgBox, Unexpected Error!
@@ -170,7 +172,8 @@ if (BROne)
     model := tableRow[13]
     port := tableRow[14]
     bgroup := tableRow[15]
-    row := name . "," . hostname . "," . username . "," . password . "," . tier . "," . manufacturer . "," . os . "," . firmware . "," . zip . "," . contactname . "," . contactemail . "," . bstatus . "," . model . "," . port . "," . bgroup . "`n"
+    uid := tableRow[16]
+    row := name . "," . hostname . "," . username . "," . password . "," . tier . "," . manufacturer . "," . os . "," . firmware . "," . zip . "," . contactname . "," . contactemail . "," . bstatus . "," . model . "," . port . "," . bgroup . "," . uid . "`n"
     if name
     {
       FileAppend, %row%, %exportTarget%
@@ -216,7 +219,7 @@ if (BROne)
   FileSelectFile, importTarget, 3
   QUERY := "DROP TABLE tb_devices;"
   Devices.Exec(QUERY)
-  Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String, tier String, manufacturer String, os String, firmware String, zip String, contactname String, contactemail String, bstatus String, model String, port String, bGroup String);")
+  Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String, tier String, manufacturer String, os String, firmware String, zip String, contactname String, contactemail String, bstatus String, model String, port String, bGroup String, uid String);")
   Loop, Read, %importTarget%
     {
       importArgs := StrSplit(A_LoopReadLine, ",")
@@ -235,7 +238,8 @@ if (BROne)
       model := "'" . importArgs[13] . "'"
       port := "'" . importArgs[14] . "'"
       bgroup := "'" . importArgs[15] . "'"
-      SQL := "INSERT INTO tb_devices VALUES (" . name . "," . hostname . "," . username . "," . password . "," . tier . "," . manufacturer . "," . os . "," . firmware . "," . zip . "," . contactname . "," . contactemail . "," . bstatus . "," . model . "," . port . "," . bGroup . ");"
+      uid := "'" . importArgs[16] . "'"
+      SQL := "INSERT INTO tb_devices VALUES (" . name . "," . hostname . "," . username . "," . password . "," . tier . "," . manufacturer . "," . os . "," . firmware . "," . zip . "," . contactname . "," . contactemail . "," . bstatus . "," . model . "," . port . "," . bGroup . "," . uid . ");"
       import := Devices.Exec(SQL)
     }
 }
