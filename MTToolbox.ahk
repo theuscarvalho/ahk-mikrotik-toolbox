@@ -230,6 +230,7 @@ LogMultiCommand(hostname, saveTarget, commandFile)
   logMultiRunning := true
   username := GetCreds("username", hostname)
   password := GetCreds("password", hostname)
+  name := GetCreds("name", hostname)
   buffer := "buffer\"
   ifNotExist, %buffer%
     FileCreateDir, %buffer%
