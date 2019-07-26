@@ -127,7 +127,7 @@ AutoRun(command)
 }
 
 ; Function CheckAlive
-; Parameters: String hostname, String name
+; Parameters: String uid, String name
 ; Returns: Boolean alive
 CheckAlive(uid, name)
 {
@@ -150,7 +150,7 @@ CheckAlive(uid, name)
 }
 
 ; Function GetCreds
-; Parameters: String type, String hostname. type must be a valid key in the database and hostname should be the hostname of a device in the database
+; Parameters: String type, String uid. type must be a valid key in the database and uid should be the uid of a device in the database
 ; Returns: String result. Will give whatever information is requested (username, password, etc.)
 GetCreds(type, uid)
 {
@@ -179,7 +179,7 @@ ClearBuffer(directory)
 }
 
 ; Function BackupRouter. Backs up router using command stored in \scripts\backup.txt.
-; Parameters: String hostname
+; Parameters: String uid
 ; Returns: String. Contains buffer directory used for clearing later
 BackupRouter(uid)
 {
@@ -226,7 +226,7 @@ BackupRouter(uid)
 }
 
 ; Function LogCommand. Executes a command on a MikroTik device and logs the output.
-; Parameters: String hostname, String command, String filename. filename must be a valid Windows File Name.
+; Parameters: String uid, String command, String filename. filename must be a valid Windows File Name.
 ; Returns: None.
 LogCommand(uid, command, filename)
 {
@@ -245,7 +245,7 @@ LogCommand(uid, command, filename)
 }
 
 ; Function LogMultiCommand
-; Parameters: String hostname, String saveTarget, String commandFile
+; Parameters: String uid, String saveTarget, String commandFile
 ; Returns: None
 LogMultiCommand(uid, saveTarget, commandFile, bufferDir)
 {
@@ -300,7 +300,7 @@ LogMultiCommand(uid, saveTarget, commandFile, bufferDir)
 }
 
 ; Function SingleCommand. Runs a single command on a MikroTik without logging.
-; Parameters: String hostname, String command
+; Parameters: String uid, String command
 ; Returns: None.
 SingleCommand(uid, command)
 {
@@ -313,7 +313,7 @@ SingleCommand(uid, command)
 }
 
 ; Function MultiCommand. Runs series of commands determined by the contents of a file.
-; Parameters: String hostname, String filePath. filePath must be a path to a file, can be in relation to the working directory or a full path.
+; Parameters: String uid, String filePath. filePath must be a path to a file, can be in relation to the working directory or a full path.
 ; Returns: None.
 MultiCommand(uid, filePath)
 {
