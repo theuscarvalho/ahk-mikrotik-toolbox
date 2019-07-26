@@ -287,6 +287,7 @@ LogMultiCommand(uid, saveTarget, commandFile, bufferDir)
       FileDelete, %copy%
       break
     }
+    tries++
   }
   filesToSearch := buffer . "*.txt"
   Loop, Files, %filesToSearch% ;Find all txt files, do not include subfolders
