@@ -197,7 +197,7 @@ BackupRouter(uid)
     FileCreateDir, %directory%
   fileName := directory . date . ".txt"
   errorCheck1 := "buffer\" . name . ".txt"
-  errorCheck2 := bufferDir . "1.txt"
+  errorCheck2 := bufferDir . "1-1.txt"
   if CheckAlive(uid, name)
   {
     LogMultiCommand(uid, fileName, commands, bufferDir)
