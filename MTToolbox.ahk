@@ -43,6 +43,7 @@ while (canIterate == true)
     LV_Add("", name, hostname, bStatus, uid)
   }
 }
+LV_ModifyCol(4, 0)
 
 ;Deletes buffer and recreates directory on startup
 FileRemoveDir buffer\, 1
@@ -263,25 +264,26 @@ LogMultiCommand(uid, saveTarget, commandFile, bufferDir)
     run, %comspec% /c %runCMD% ,,hide
     line++
   }
-  size := 0
+  toCheck := buffer . "1.txt"
+  copy := buffer . "1-1.txt"
   tries := 1
-  Sleep 5000
+  Sleep 3000
   Loop
   {
-    toCheck := buffer . "1.txt"
-    FileGetSize, sizeTemp, %toCheck%
-    if sizeTemp > size
-    {
-      size := sizeTemp
-      Sleep 500
-    }
-    else
+    FileCopy, %toCheck%, %copy%
+    FileDelete, %toCheck%
+    if !FileExist(toCheck)
     {
       break
     }
-    tries++
-    if tries > 10
+    else
     {
+      FileDelete, %copy%
+      sleep 500
+    }
+    if tries > 60
+    {
+      FileDelete, %copy%
       break
     }
   }

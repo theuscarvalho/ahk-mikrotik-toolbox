@@ -55,6 +55,7 @@ while (canIterate == true)
     LV_Add("", name, hostname, port, username, password, tier, zip, contactName, contactEmail, uid)
   }
 }
+LV_ModifyCol(10, 0)
 Gui, Show,, Edit MT Clients
 
 return
