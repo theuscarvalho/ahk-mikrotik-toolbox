@@ -107,7 +107,8 @@ AutoRun(command)
       checkCommand := "backup"
       if (%command% = %checkCommand%)
       {
-        BackupRouter(uid)
+        bufferDir := BackupRouter(uid)
+        ClearBuffer(bufferDir)
       }
       checkCommand := "firmware"
       if (%command% = %checkCommand%)
@@ -295,7 +296,6 @@ LogMultiCommand(uid, saveTarget, commandFile, bufferDir)
         FileAppend, %A_LoopReadLine%`n
       }
   }
-  ClearBuffer(buffer)
   return
 }
 
