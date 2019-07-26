@@ -14,12 +14,12 @@ Devices := New SQLiteDB
 if !Devices.OpenDB("devices.db", "W", false)
 {
   Devices.OpenDB("devices.db")
-  Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String, tier String, manufacturer String, os String, firmware String, zip String, contactname String, contactemail String, bstatus String, model String);")
+  Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String, tier String, manufacturer String, os String, firmware String, zip String, contactname String, contactemail String, bstatus String, model String, port String, bGroup String, uid String);")
 }
 Devices.GetTable("SELECT * FROM tb_devices;", table)
 
 ;Draw GUI
-Gui, Add, GroupBox, xp+6 yp+5 w470 h250, Commands
+Gui, Add, GroupBox, xp+6 yp+5 w700 h450, Commands
 Gui, Add, Button, xp+5 yp+20 w120 gEdit, Edit Clients
 Gui, Add, Button, yp+25 w120 gCommand, Run Command
 Gui, Add, Button, yp+25 w120 gFirmware, Update Firmware
@@ -27,7 +27,7 @@ Gui, Add, Button, yp+25 w120 gRouterOS, Update RouterOS
 Gui, Add, Button, yp+25 w120 gBackup, Run Manual Backup
 Gui, Add, Button, yp+25 w120 gReboot, Reboot
 Gui, Add, Button, yp+25 w120 gWinbox, Winbox Session
-Gui, Add, ListView, yp-160 xp+125 w335 h235, Name|Hostname
+Gui, Add, ListView, yp-160 xp+125 w565 h435, Name|Hostname|Backup Status|uid
 
 ;Loop to populate the listview
 canIterate := true
@@ -36,14 +36,20 @@ while (canIterate == true)
   canIterate := table.Next(tableRow)
   name := tableRow[1]
   hostname := tableRow[2]
+  bStatus := tableRow[12]
+  uid := tableRow[16]
   if name
   {
-    LV_Add("", name, hostname)
+    LV_Add("", name, hostname, bStatus, uid)
   }
 }
+LV_ModifyCol(4, 0)
+
+;Deletes buffer and recreates directory on startup
+FileRemoveDir buffer\, 1
+FileCreateDir buffer
 
 ;The following loop and function handle processing of any command line flags.
-logMultiRunning := false
 Global Args := []
 Loop, %0%
 	Args.Push(%A_Index%)
@@ -95,32 +101,25 @@ AutoRun(command)
   {
     canIterate := table.Next(tableRow)
     name := tableRow[1]
-    hostname := tableRow[2]
+    uid := tableRow[16]
     if name
     {
       checkCommand := "backup"
       if (%command% = %checkCommand%)
       {
-        BackupRouter(hostname)
-        Sleep 200
+        bufferDir := BackupRouter(uid)
+        ClearBuffer(bufferDir)
       }
       checkCommand := "firmware"
       if (%command% = %checkCommand%)
       {
-        SingleCommand(hostname, "/system routerboard upgrade")
-        Sleep 200
+        SingleCommand(uid, "/system routerboard upgrade")
       }
       checkCommand := "rOS"
       if (%command% = %checkCommand%)
       {
-        SingleCommand(hostname, "/system package update install")
-        Sleep 200
+        SingleCommand(uid, "/system package update install")
       }
-    }
-    Loop
-    {
-	    if !logMultiRunning
-        break
     }
   }
   Devices.CloseDB()
@@ -128,10 +127,11 @@ AutoRun(command)
 }
 
 ; Function CheckAlive
-; Parameters: String hostname, String name
+; Parameters: String uid, String name
 ; Returns: Boolean alive
-CheckAlive(hostname, name)
+CheckAlive(uid, name)
 {
+  hostname := GetCreds("hostname", uid)
   alive := false
   runCMD := "ping " . hostname . " >> ""buffer\" . name . ".txt"""
   run, %comspec% /c %runCMD% ,,hide
@@ -150,12 +150,12 @@ CheckAlive(hostname, name)
 }
 
 ; Function GetCreds
-; Parameters: String type, String hostname. type must be a valid key in the database and hostname should be the hostname of a device in the database
+; Parameters: String type, String uid. type must be a valid key in the database and uid should be the uid of a device in the database
 ; Returns: String result. Will give whatever information is requested (username, password, etc.)
-GetCreds(type, hostname)
+GetCreds(type, uid)
 {
   Global Devices
-  QUERY := "SELECT " . type . " FROM tb_devices WHERE hostname='" . hostname . "';"
+  QUERY := "SELECT " . type . " FROM tb_devices WHERE uid='" . uid . "';"
   Devices.Query(QUERY, resultQuery)
   resultQuery.Next(resultRow)
   result := resultRow[1]
@@ -179,81 +179,113 @@ ClearBuffer(directory)
 }
 
 ; Function BackupRouter. Backs up router using command stored in \scripts\backup.txt.
-; Parameters: String hostname
+; Parameters: String uid
 ; Returns: String. Contains buffer directory used for clearing later
-BackupRouter(hostname)
+BackupRouter(uid)
 {
+  Global Devices
+  hostname := GetCreds("hostname", uid)
+  name := GetCreds("name", uid)
   directory := "backups\"
   commands := "scripts/backup.txt"
+  bufferDir := "buffer\" . name . "\"
   ifNotExist, %directory%
     FileCreateDir, %directory%
-  name := GetCreds("name", hostname)
-
   formattime, date, , MM-dd-yyyy_HHmm
   directory := directory . name . "\"
   ifNotExist, %directory%
     FileCreateDir, %directory%
   fileName := directory . date . ".txt"
-  LogMultiCommand(hostname, fileName, commands)
-  Sleep 200
-  Loop
+  errorCheck1 := "buffer\" . name . ".txt"
+  errorCheck2 := bufferDir . "1-1.txt"
+  if CheckAlive(uid, name)
   {
-    if !logMultiRunning
-      break
+    LogMultiCommand(uid, fileName, commands, bufferDir)
   }
-  return %buffer%
+  if FileExist(fileName)
+  {
+    QUERY := "UPDATE tb_devices SET bstatus = 'Success' WHERE uid = '" . uid . "';"
+    Devices.Exec(QUERY)
+  }
+  else if FileExist(errorCheck1)
+  {
+    QUERY := "UPDATE tb_devices SET bstatus = 'Timeout' WHERE uid = '" . uid . "';"
+    Devices.Exec(QUERY)
+  }
+  else if FileExist(errorCheck2)
+  {
+    QUERY := "UPDATE tb_devices SET bstatus = 'Bad Credentials' WHERE uid = '" . uid . "';"
+    Devices.Exec(QUERY)
+  }
+  else
+  {
+    QUERY := "UPDATE tb_devices SET bstatus = 'Unknown Error' WHERE uid = '" . uid . "';"
+    Devices.Exec(QUERY)
+  }
+  return %bufferDir%
 }
 
 ; Function LogCommand. Executes a command on a MikroTik device and logs the output.
-; Parameters: String hostname, String command, String filename. filename must be a valid Windows File Name.
+; Parameters: String uid, String command, String filename. filename must be a valid Windows File Name.
 ; Returns: None.
-LogCommand(hostname, command, filename)
+LogCommand(uid, command, filename)
 {
   Global Devices
-  name := GetCreds("name", hostname)
-  username := GetCreds("username", hostname)
-  password := GetCreds("password", hostname)
+  name := GetCreds("name", uid)
+  username := GetCreds("username", uid)
+  password := GetCreds("password", uid)
+  hostname := GetCreds("hostname", uid)
+  port := GetCreds("port", uid)
   directory := "backups\" . name . "\"
   FileCreateDir, %directory%
   fileName := directory . filename
-  runCMD := "echo y  | plink.exe -ssh " . hostname . " -l " . username . " -pw " . password . " " . command . " > " . """" . fileName . """"
+  runCMD := "echo y  | plink.exe -ssh -P" . port . " " . hostname . " -l " . username . " -pw " . password . " " . command . " > " . """" . fileName . """"
   run, %comspec% /c %runCMD% ,,hide
   return
 }
 
 ; Function LogMultiCommand
-; Parameters: String hostname, String saveTarget, String commandFile
+; Parameters: String uid, String saveTarget, String commandFile
 ; Returns: None
-LogMultiCommand(hostname, saveTarget, commandFile)
+LogMultiCommand(uid, saveTarget, commandFile, bufferDir)
 {
-  Global logMultiRunning
-  logMultiRunning := true
-  username := GetCreds("username", hostname)
-  password := GetCreds("password", hostname)
-  name := GetCreds("name", hostname)
-  buffer := "buffer\"
+  username := GetCreds("username", uid)
+  password := GetCreds("password", uid)
+  name := GetCreds("name", uid)
+  port := GetCreds("port", uid)
+  hostname := GetCreds("hostname", uid)
+  buffer := bufferDir
   ifNotExist, %buffer%
     FileCreateDir, %buffer%
   line := 1
   Loop, read, %commandFile%
   {
     bufferFile := buffer . line . ".txt"
-    runCMD := "echo y  | plink.exe -ssh " . hostname . " -l " . username . " -pw " . password . " " . A_LoopReadLine . " > " . """" . bufferFile . """"
+    runCMD := "echo y  | plink.exe -ssh -P " . port . " " . hostname . " -l " . username . " -pw " . password . " " . A_LoopReadLine . " > " . """" . bufferFile . """"
     run, %comspec% /c %runCMD% ,,hide
     line++
   }
+  toCheck := buffer . "1.txt"
+  copy := buffer . "1-1.txt"
+  tries := 1
+  Sleep 3000
   Loop
   {
-    Process, Exist, cmd.exe
+    FileCopy, %toCheck%, %copy%
+    FileDelete, %toCheck%
+    if !FileExist(toCheck)
     {
-      If ! errorLevel
-      {
-        break
-      }
-      else
-      {
-        Sleep 500
-      }
+      break
+    }
+    else
+    {
+      FileDelete, %copy%
+      sleep 500
+    }
+    if tries > 60
+    {
+      FileDelete, %copy%
+      break
     }
   }
   filesToSearch := buffer . "*.txt"
@@ -264,30 +296,32 @@ LogMultiCommand(hostname, saveTarget, commandFile)
         FileAppend, %A_LoopReadLine%`n
       }
   }
-  ClearBuffer(buffer)
-  logMultiRunning := false
   return
 }
 
 ; Function SingleCommand. Runs a single command on a MikroTik without logging.
-; Parameters: String hostname, String command
+; Parameters: String uid, String command
 ; Returns: None.
-SingleCommand(hostname, command)
+SingleCommand(uid, command)
 {
-  username := GetCreds("username", hostname)
-  password := GetCreds("password", hostname)
-  runCMD := "echo y  | plink.exe -ssh " . hostname . " -l " . username . " -pw " . password . " " . command
+  username := GetCreds("username", uid)
+  password := GetCreds("password", uid)
+  port := GetCreds("port", uid)
+  hostname := GetCreds("hostname", uid)
+  runCMD := "echo y  | plink.exe -ssh -P " . port . " " . hostname . " -l " . username . " -pw " . password . " " . command
   run, %comspec% /c %runCMD% ,,hide
 }
 
 ; Function MultiCommand. Runs series of commands determined by the contents of a file.
-; Parameters: String hostname, String filePath. filePath must be a path to a file, can be in relation to the working directory or a full path.
+; Parameters: String uid, String filePath. filePath must be a path to a file, can be in relation to the working directory or a full path.
 ; Returns: None.
-MultiCommand(hostname, filePath)
+MultiCommand(uid, filePath)
 {
-  username := GetCreds("username", hostname)
-  password := GetCreds("password", hostname)
-  runCMD := "echo y | plink.exe -ssh " . hostname . " -l " . username . " -pw " . password . " -m """ . filePath . """"
+  username := GetCreds("username", uid)
+  password := GetCreds("password", uid)
+  port := GetCreds("port", uid)
+  hostname := GetCreds("hostname", uid)
+  runCMD := "echo y | plink.exe -ssh -P " . port . " " . hostname . " -l " . username . " -pw " . password . " -m """ . filePath . """"
   run, %comspec% /c %runCMD% ,,hide
 }
 
@@ -304,8 +338,8 @@ loop
   {
     break
   }
-  LV_GetText(DelHostname, RowNumber, 2)
-  QUERY := "DELETE FROM tb_devices WHERE hostname='" . DelHostname . "';"
+  LV_GetText(DelUid, RowNumber, 4)
+  QUERY := "DELETE FROM tb_devices WHERE uid='" . DelUid . "';"
   if (Devices.Exec(QUERY))
   {
     LV_Delete(RowNumber)
@@ -321,8 +355,8 @@ loop % LV_GetCount("S")
     Rownumber := 0
   }
   RowNumber := LV_GetNext(RowNumber)
-  LV_GetText(hostname, RowNumber, 2)
-  MultiCommand(hostname, commandTarget)
+  LV_GetText(uid, RowNumber, 4)
+  MultiCommand(uid, commandTarget)
 }
 return
 Firmware:
@@ -333,8 +367,8 @@ loop % LV_GetCount("S")
     Rownumber := 0
   }
   RowNumber := LV_GetNext(RowNumber)
-  LV_GetText(hostname, RowNumber, 2)
-  SingleCommand(hostname, "/system routerboard upgrade")
+  LV_GetText(uid, RowNumber, 4)
+  SingleCommand(uid, "/system routerboard upgrade")
 }
 return
 RouterOS:
@@ -345,8 +379,8 @@ loop % LV_GetCount("S")
     Rownumber := 0
   }
   RowNumber := LV_GetNext(RowNumber)
-  LV_GetText(hostname, RowNumber, 2)
-  SingleCommand(hostname, "/system package update install")
+  LV_GetText(uid, RowNumber, 4)
+  SingleCommand(uid, "/system package update install")
 }
 return
 backup:
@@ -357,8 +391,8 @@ loop % LV_GetCount("S")
     Rownumber := 0
   }
   RowNumber := LV_GetNext(RowNumber)
-  LV_GetText(hostname, RowNumber, 2)
-  BackupRouter(hostname)
+  LV_GetText(uid, RowNumber, 4)
+  BackupRouter(uid)
 }
 Rownumber := 0
 return
@@ -370,8 +404,8 @@ loop % LV_GetCount("S")
     Rownumber := 0
   }
   RowNumber := LV_GetNext(RowNumber)
-  LV_GetText(hostname, RowNumber, 2)
-  SingleCommand(hostname, "/system reboot")
+  LV_GetText(uid, RowNumber, 4)
+  SingleCommand(uid, "/system reboot")
 }
 return
 winbox:
@@ -382,9 +416,10 @@ loop % LV_GetCount("S")
     Rownumber := 0
   }
   RowNumber := LV_GetNext(RowNumber)
-  LV_GetText(hostname, RowNumber, 2)
-  username := GetCreds("username", hostname)
-  password := GetCreds("password", hostname)
+  LV_GetText(uid, RowNumber, 4)
+  username := GetCreds("username", uid)
+  password := GetCreds("password", uid)
+  hostname := GetCreds("hostname", uid)
   runCMD := "winbox " . hostname . " " . username . " " . password
   run, %comspec% /c %runCMD% ,,hide
 }
