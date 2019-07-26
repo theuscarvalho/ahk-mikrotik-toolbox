@@ -14,7 +14,7 @@ Devices := New SQLiteDB
 if !Devices.OpenDB("devices.db", "W", false)
 {
   Devices.OpenDB("devices.db")
-  Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String, tier String, manufacturer String, os String, firmware String, zip String, contactname String, contactemail String, bstatus String, model String);")
+  Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String, tier String, manufacturer String, os String, firmware String, zip String, contactname String, contactemail String, bstatus String, model String, port String, bGroup String);")
 }
 Devices.GetTable("SELECT * FROM tb_devices;", table)
 
@@ -229,10 +229,11 @@ LogCommand(hostname, command, filename)
   name := GetCreds("name", hostname)
   username := GetCreds("username", hostname)
   password := GetCreds("password", hostname)
+  port := GetCreds("port", hostname)
   directory := "backups\" . name . "\"
   FileCreateDir, %directory%
   fileName := directory . filename
-  runCMD := "echo y  | plink.exe -ssh " . hostname . " -l " . username . " -pw " . password . " " . command . " > " . """" . fileName . """"
+  runCMD := "echo y  | plink.exe -ssh -P" . port . " " . hostname . " -l " . username . " -pw " . password . " " . command . " > " . """" . fileName . """"
   run, %comspec% /c %runCMD% ,,hide
   return
 }
@@ -245,6 +246,7 @@ LogMultiCommand(hostname, saveTarget, commandFile, bufferDir)
   username := GetCreds("username", hostname)
   password := GetCreds("password", hostname)
   name := GetCreds("name", hostname)
+  port := GetCreds("port", hostname)
   buffer := bufferDir
   ifNotExist, %buffer%
     FileCreateDir, %buffer%
@@ -252,7 +254,7 @@ LogMultiCommand(hostname, saveTarget, commandFile, bufferDir)
   Loop, read, %commandFile%
   {
     bufferFile := buffer . line . ".txt"
-    runCMD := "echo y  | plink.exe -ssh " . hostname . " -l " . username . " -pw " . password . " " . A_LoopReadLine . " > " . """" . bufferFile . """"
+    runCMD := "echo y  | plink.exe -ssh -P " . port . " " . hostname . " -l " . username . " -pw " . password . " " . A_LoopReadLine . " > " . """" . bufferFile . """"
     run, %comspec% /c %runCMD% ,,hide
     line++
   }
@@ -297,7 +299,8 @@ SingleCommand(hostname, command)
 {
   username := GetCreds("username", hostname)
   password := GetCreds("password", hostname)
-  runCMD := "echo y  | plink.exe -ssh " . hostname . " -l " . username . " -pw " . password . " " . command
+  port := GetCreds("port", hostname)
+  runCMD := "echo y  | plink.exe -ssh -P " . port . " " . hostname . " -l " . username . " -pw " . password . " " . command
   run, %comspec% /c %runCMD% ,,hide
 }
 
@@ -308,7 +311,8 @@ MultiCommand(hostname, filePath)
 {
   username := GetCreds("username", hostname)
   password := GetCreds("password", hostname)
-  runCMD := "echo y | plink.exe -ssh " . hostname . " -l " . username . " -pw " . password . " -m """ . filePath . """"
+  port := GetCreds("port", hostname)
+  runCMD := "echo y | plink.exe -ssh -P " . port . " " . hostname . " -l " . username . " -pw " . password . " -m """ . filePath . """"
   run, %comspec% /c %runCMD% ,,hide
 }
 
