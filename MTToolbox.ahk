@@ -27,7 +27,7 @@ Gui, Add, Button, yp+25 w120 gRouterOS, Update RouterOS
 Gui, Add, Button, yp+25 w120 gBackup, Run Manual Backup
 Gui, Add, Button, yp+25 w120 gReboot, Reboot
 Gui, Add, Button, yp+25 w120 gWinbox, Winbox Session
-Gui, Add, ListView, yp-160 xp+125 w335 h235, Name|Hostname
+Gui, Add, ListView, yp-160 xp+125 w335 h235, Name|Hostname|Backup Status
 
 ;Loop to populate the listview
 canIterate := true
@@ -36,14 +36,18 @@ while (canIterate == true)
   canIterate := table.Next(tableRow)
   name := tableRow[1]
   hostname := tableRow[2]
+  bStatus := tableRow[12]
   if name
   {
-    LV_Add("", name, hostname)
+    LV_Add("", name, hostname, bStatus)
   }
 }
 
+;Deletes buffer and recreates directory on startup
+FileRemoveDir buffer\, 1
+FileCreateDir buffer
+
 ;The following loop and function handle processing of any command line flags.
-logMultiRunning := false
 Global Args := []
 Loop, %0%
 	Args.Push(%A_Index%)
@@ -102,25 +106,17 @@ AutoRun(command)
       if (%command% = %checkCommand%)
       {
         BackupRouter(hostname)
-        Sleep 200
       }
       checkCommand := "firmware"
       if (%command% = %checkCommand%)
       {
         SingleCommand(hostname, "/system routerboard upgrade")
-        Sleep 200
       }
       checkCommand := "rOS"
       if (%command% = %checkCommand%)
       {
         SingleCommand(hostname, "/system package update install")
-        Sleep 200
       }
-    }
-    Loop
-    {
-	    if !logMultiRunning
-        break
     }
   }
   Devices.CloseDB()
@@ -183,25 +179,45 @@ ClearBuffer(directory)
 ; Returns: String. Contains buffer directory used for clearing later
 BackupRouter(hostname)
 {
+  Global Devices
+  name := GetCreds("name", hostname)
   directory := "backups\"
   commands := "scripts/backup.txt"
+  bufferDir := "buffer\" . name . "\"
   ifNotExist, %directory%
     FileCreateDir, %directory%
-  name := GetCreds("name", hostname)
-
   formattime, date, , MM-dd-yyyy_HHmm
   directory := directory . name . "\"
   ifNotExist, %directory%
     FileCreateDir, %directory%
   fileName := directory . date . ".txt"
-  LogMultiCommand(hostname, fileName, commands)
-  Sleep 200
-  Loop
+  errorCheck1 := "buffer\" . name . ".txt"
+  errorCheck2 := bufferDir . "1.txt"
+  if CheckAlive(hostname, name)
   {
-    if !logMultiRunning
-      break
+    LogMultiCommand(hostname, fileName, commands, bufferDir)
   }
-  return %buffer%
+  if FileExist(fileName)
+  {
+    QUERY := "UPDATE tb_devices SET bstatus = 'Success' WHERE hostname = '" . hostname . "';"
+    Devices.Exec(QUERY)
+  }
+  else if FileExist(errorCheck1)
+  {
+    QUERY := "UPDATE tb_devices SET bstatus = 'Timeout' WHERE hostname = '" . hostname . "';"
+    Devices.Exec(QUERY)
+  }
+  else if FileExist(errorCheck2)
+  {
+    QUERY := "UPDATE tb_devices SET bstatus = 'Bad Credentials' WHERE hostname = '" . hostname . "';"
+    Devices.Exec(QUERY)
+  }
+  else
+  {
+    QUERY := "UPDATE tb_devices SET bstatus = 'Unknown Error' WHERE hostname = '" . hostname . "';"
+    Devices.Exec(QUERY)
+  }
+  return %bufferDir%
 }
 
 ; Function LogCommand. Executes a command on a MikroTik device and logs the output.
@@ -224,14 +240,12 @@ LogCommand(hostname, command, filename)
 ; Function LogMultiCommand
 ; Parameters: String hostname, String saveTarget, String commandFile
 ; Returns: None
-LogMultiCommand(hostname, saveTarget, commandFile)
+LogMultiCommand(hostname, saveTarget, commandFile, bufferDir)
 {
-  Global logMultiRunning
-  logMultiRunning := true
   username := GetCreds("username", hostname)
   password := GetCreds("password", hostname)
   name := GetCreds("name", hostname)
-  buffer := "buffer\"
+  buffer := bufferDir
   ifNotExist, %buffer%
     FileCreateDir, %buffer%
   line := 1
@@ -242,18 +256,26 @@ LogMultiCommand(hostname, saveTarget, commandFile)
     run, %comspec% /c %runCMD% ,,hide
     line++
   }
+  size := 0
+  tries := 1
+  Sleep 5000
   Loop
   {
-    Process, Exist, cmd.exe
+    toCheck := buffer . "1.txt"
+    FileGetSize, sizeTemp, %toCheck%
+    if sizeTemp > size
     {
-      If ! errorLevel
-      {
-        break
-      }
-      else
-      {
-        Sleep 500
-      }
+      size := sizeTemp
+      Sleep 500
+    }
+    else
+    {
+      break
+    }
+    tries++
+    if tries > 10
+    {
+      break
     }
   }
   filesToSearch := buffer . "*.txt"
@@ -265,7 +287,6 @@ LogMultiCommand(hostname, saveTarget, commandFile)
       }
   }
   ClearBuffer(buffer)
-  logMultiRunning := false
   return
 }
 
