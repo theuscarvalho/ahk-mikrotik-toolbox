@@ -73,6 +73,11 @@ Add:
   GuiControlGet, ContactEmail
   GuiControlGet, Port
   FormatTime, uid, ,yyMMddHHmmss
+  if !Name or !Hostname or !Username or !Password or !Zip or !ContactName or !ContactEmail or !Port
+  {
+    MsgBox, You have a blank field, router not stored.
+    return
+  }
   QUERY := "INSERT INTO tb_devices VALUES ('" . Name . "','" . Hostname . "','" . Username . "','" . Password . "','" . Tier . "','MikroTik', '0', '0', '" . Zip . "', '" . ContactName . "', '" . ContactEmail . "', 'fail', '0', '" . Port . "', 'none', '" . uid . "');"
   if Devices.Exec(QUERY)
   {
@@ -92,6 +97,10 @@ Update:
   GuiControlGet, ContactName
   GuiControlGet, ContactEmail
   GuiControlGet, Port
+  {
+    MsgBox, You have a blank field, router config not updated.
+    return
+  }
   newName := Name
   newHostname := Hostname
   newUsername := Username
