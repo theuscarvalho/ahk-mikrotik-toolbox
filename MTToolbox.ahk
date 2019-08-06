@@ -10,7 +10,7 @@ SendMode Input
 SetWorkingDir %A_ScriptDir%
 
 ;Variables for logging
-formattime, date, , MM-dd-yy_HHmm
+formattime, date, , MM-dd-yy
 ifNotExist, logs\
   FileCreateDir, logs\
 logFile := "logs\" date . ".txt"
