@@ -131,6 +131,9 @@ Update:
   LV_Modify(row,"",newName,newHostname,newPort,newUsername,newPassword,newTier,newZip,newContactName,newContactEmail,uid)
   return
 Delete:
+MsgBox, 4,, Are you sure you want to delete this router from the database?
+  IfMsgBox No
+    return
   row := LV_GetNext()
   LV_GetText(DelUid, row, 10)
   QUERY := "DELETE FROM tb_devices WHERE uid='" . DelUid . "';"

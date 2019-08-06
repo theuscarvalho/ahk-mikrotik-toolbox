@@ -373,6 +373,9 @@ loop % LV_GetCount("S")
 }
 return
 RouterOS:
+MsgBox, 4,, Are you sure you want to update these routers? This will automatically reboot them.
+  IfMsgBox No
+    return
 loop % LV_GetCount("S")
 {
   if not RowNumber
@@ -398,6 +401,9 @@ loop % LV_GetCount("S")
 Rownumber := 0
 return
 reboot:
+MsgBox, 4,, Are you sure you want to reboot these routers?
+  IfMsgBox No
+    return
 loop % LV_GetCount("S")
 {
   if not RowNumber
