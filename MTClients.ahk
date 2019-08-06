@@ -8,7 +8,7 @@ Gui, Add, Text, xp+5 yp+15, Friendly Name
 Gui, Add, Edit, yp+15 r1 w160 vName,
 Gui, Add, Text, yp+25, Hostname
 Gui, Add, Edit, yp+15 r1 w160 vHostname,
-Gui, Add, Text, yp+25, Port
+Gui, Add, Text, yp+25, SSH Port
 Gui, Add, Edit, yp+15 r1 w160 vPort,22
 Gui, Add, Text, yp+25, Username
 Gui, Add, Edit, yp+15 r1 w160 vUsername,
