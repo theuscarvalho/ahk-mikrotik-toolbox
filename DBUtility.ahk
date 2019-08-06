@@ -68,7 +68,7 @@ if (SourceLegacy)
       return
     QUERY := "DROP TABLE tb_devices;"
     Devices.Exec(QUERY)
-    Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String, tier String, manufacturer String, os String, firmware String, zip String, contactname String, contactemail String, bstatus String, model String, port String, bGroup String, uid String);")
+    Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String, winport String, manufacturer String, os String, firmware String, zip String, contactname String, contactemail String, bstatus String, model String, port String, bGroup String, uid String);")
     uid := 1
     Loop, Read, conversionbuffer.txt
       {
@@ -77,7 +77,7 @@ if (SourceLegacy)
         hostname := "'" . importArgs[2] . "'"
         username := "'" . importArgs[3] . "'"
         password := "'" . importArgs[4] . "'"
-        SQL := "INSERT INTO tb_devices VALUES (" . name . "," . hostname . "," . username . "," . password . ", '0', 'MikroTik', '0', '0', '0', 'John Doe', 'null@null', 'fail', '0', '22', 'none', '" . uid . "');"
+        SQL := "INSERT INTO tb_devices VALUES (" . name . "," . hostname . "," . username . "," . password . ", '8291', 'MikroTik', '0', '0', '0', 'John Doe', 'null@null', 'fail', '0', '22', 'none', '" . uid . "');"
         import := Devices.Exec(SQL)
         uid++
       }
@@ -161,7 +161,7 @@ if (BROne)
     hostname := tableRow[2]
     username := tableRow[3]
     password := tableRow[4]
-    tier := tableRow[5]
+    winport := tableRow[5]
     manufacturer := tableRow[6]
     os := tableRow[7]
     firmware := tableRow[8]
@@ -173,7 +173,7 @@ if (BROne)
     port := tableRow[14]
     bgroup := tableRow[15]
     uid := tableRow[16]
-    row := name . "," . hostname . "," . username . "," . password . "," . tier . "," . manufacturer . "," . os . "," . firmware . "," . zip . "," . contactname . "," . contactemail . "," . bstatus . "," . model . "," . port . "," . bgroup . "," . uid . "`n"
+    row := name . "," . hostname . "," . username . "," . password . "," . winport . "," . manufacturer . "," . os . "," . firmware . "," . zip . "," . contactname . "," . contactemail . "," . bstatus . "," . model . "," . port . "," . bgroup . "," . uid . "`n"
     if name
     {
       FileAppend, %row%, %exportTarget%
@@ -219,7 +219,7 @@ if (BROne)
   FileSelectFile, importTarget, 3
   QUERY := "DROP TABLE tb_devices;"
   Devices.Exec(QUERY)
-  Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String, tier String, manufacturer String, os String, firmware String, zip String, contactname String, contactemail String, bstatus String, model String, port String, bGroup String, uid String);")
+  Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String, winport String, manufacturer String, os String, firmware String, zip String, contactname String, contactemail String, bstatus String, model String, port String, bGroup String, uid String);")
   Loop, Read, %importTarget%
     {
       importArgs := StrSplit(A_LoopReadLine, ",")
@@ -227,7 +227,7 @@ if (BROne)
       hostname := "'" . importArgs[2] . "'"
       username := "'" . importArgs[3] . "'"
       password := "'" . importArgs[4] . "'"
-      tier := "'" . importArgs[5] . "'"
+      winport := "'" . importArgs[5] . "'"
       manufacturer := "'" . importArgs[6] . "'"
       os := "'" . importArgs[7] . "'"
       firmware := "'" . importArgs[8] . "'"
@@ -239,7 +239,7 @@ if (BROne)
       port := "'" . importArgs[14] . "'"
       bgroup := "'" . importArgs[15] . "'"
       uid := "'" . importArgs[16] . "'"
-      SQL := "INSERT INTO tb_devices VALUES (" . name . "," . hostname . "," . username . "," . password . "," . tier . "," . manufacturer . "," . os . "," . firmware . "," . zip . "," . contactname . "," . contactemail . "," . bstatus . "," . model . "," . port . "," . bGroup . "," . uid . ");"
+      SQL := "INSERT INTO tb_devices VALUES (" . name . "," . hostname . "," . username . "," . password . "," . winport . "," . manufacturer . "," . os . "," . firmware . "," . zip . "," . contactname . "," . contactemail . "," . bstatus . "," . model . "," . port . "," . bGroup . "," . uid . ");"
       import := Devices.Exec(SQL)
     }
 }
