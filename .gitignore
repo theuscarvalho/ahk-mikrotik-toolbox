@@ -4,6 +4,7 @@
 *.db
 *.dll
 *.def
+/*.txt
 Class_SQLiteDB
 Class_SQLiteDB.ahk
 FeatureList.txt
