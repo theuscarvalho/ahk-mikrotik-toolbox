@@ -3,6 +3,12 @@
 SendMode Input
 SetWorkingDir %A_ScriptDir%
 
+;Variables for logging
+formattime, date, , MM-dd-yy_HHmm
+ifNotExist, logs\
+  FileCreateDir, logs\
+logFile := "logs\" date . ".txt"
+
 Gui, Add, GroupBox, xp+6 yp+5 w200 h300, DB Utility
 Gui, font, bold
 Gui, Add, Text, xp+5 yp+15, Database Conversion
@@ -28,11 +34,22 @@ Gui, Show
 
 return
 
+writeLog(text, severity)
+{
+  Global computerUser
+  Global logFile
+  formattime, logtime, ,HHmm
+  text := severity . " " . logtime . " - " . A_UserName . " " . text . "`n"
+  FileAppend, %text%, %logFile%
+  return
+}
+
 Convert:
 Gui, Submit, NoHide
 MsgBox, 4,, Have you taken a backup? It is highly recommended that you do that first.
   IfMsgBox No
     return
+writeLog("has started a database conversion", "WARNING")
 if (SourceLegacy)
 {
   if (TargetLegacy)
@@ -81,6 +98,8 @@ if (SourceLegacy)
         import := Devices.Exec(SQL)
         uid++
       }
+    writeLog("has upgraded the database from version legacy to version 1", "CRITICAL")
+    MsgBox, Database converted!
   }
   else MsgBox, Unexpected Error!
 }
@@ -133,6 +152,8 @@ else if (SourceOne)
         SQL := "INSERT INTO tb_devices VALUES (" . name . "," . hostname . "," . username . "," . password . ");"
         import := Devices.Exec(SQL)
       }
+    writeLog("has downgraded the database from version 1 to version legacy", "CRITICAL")
+    MsgBox, Database converted!
   }
 }
 else MsgBox, Unexpected error!
@@ -147,6 +168,7 @@ Devices := New SQLiteDB
 if !Devices.OpenDB("devices.db", "W", false)
 {
   MsgBox, Database not found. Cancelling conversion.
+  writeLog("tried to back up the database but it wasn't found", "INFO")
   return
 }
 if (BROne)
@@ -179,6 +201,8 @@ if (BROne)
       FileAppend, %row%, %exportTarget%
     }
   }
+  toLog := "has backed up the database to file " . exportTarget
+  writeLog(toLog, "WARNING")
 }
 else if (BRLegacy)
 {
@@ -198,6 +222,8 @@ else if (BRLegacy)
       FileAppend, %row%, %exportTarget%
     }
   }
+  toLog := "has backed up the database to file " . exportTarget
+  writeLog(toLog, "WARNING")
 }
 else MsgBox, Error! No Option Selected!
 Devices.CloseDB()
@@ -214,6 +240,7 @@ Gui, Submit, NoHide
 MsgBox, 4,, This will wipe your current database. Would you like to continue?
   IfMsgBox No
     return
+writeLog("has started importing a backup configuration", "WARNING")
 if (BROne)
 {
   FileSelectFile, importTarget, 3
@@ -242,6 +269,8 @@ if (BROne)
       SQL := "INSERT INTO tb_devices VALUES (" . name . "," . hostname . "," . username . "," . password . "," . winport . "," . manufacturer . "," . os . "," . firmware . "," . zip . "," . contactname . "," . contactemail . "," . bstatus . "," . model . "," . port . "," . bGroup . "," . uid . ");"
       import := Devices.Exec(SQL)
     }
+  toLog := "has imported a database from file " . importTarget
+  writeLog(toLog, "CRITICAL")
 }
 else if (BRLegacy)
 {
@@ -259,6 +288,8 @@ else if (BRLegacy)
       SQL := "INSERT INTO tb_devices VALUES (" . name . "," . hostname . "," . username . "," . password . ");"
       import := Devices.Exec(SQL)
     }
+  toLog := "has imported a database from file " . importTarget
+  writeLog(toLog, "CRITICAL")
 }
 else MsgBox, Error! No option selected!
 Devices.CloseDB()
