@@ -99,6 +99,7 @@ Gui, Show,, MikroTik Toolbox
 LV_ModifyCol(1, "AutoHdr")
 LV_ModifyCol(2, "AutoHdr")
 LV_ModifyCol(3, "AutoHdr")
+LV_ModifyCol(1, "Sort")
 return
 
 writeLog(text, severity)
