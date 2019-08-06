@@ -64,18 +64,18 @@ Loop %0%
 {
   If (ObjHasValue(Args, "-backup"))
   {
-		AutoRun("backup")
     writeLog("has initiated an automatic backup", "INFO")
+		AutoRun("backup")
   }
   If (ObjHasValue(Args, "-firmware"))
   {
-		AutoRun("firmware")
     writeLog("has initiated an automatic firmware upgrade", "WARNING")
+		AutoRun("firmware")
   }
   If (ObjHasValue(Args, "-ros"))
   {
-		AutoRun("rOS")
     writeLog("has initiated an automatic routerOS upgrade", "WARNING")
+		AutoRun("rOS")
   }
 }
 ObjHasValue(Obj, Value, Ret := 0) {
@@ -115,10 +115,12 @@ writeLog(text, severity)
 ;Automatically backs up all devices and their /ip cloud info then exits the application
 AutoRun(command)
 {
+  checkBackup := "backup"
+  checkFirmware := "firmware"
+  checkROS := "rOS"
   Global Devices
   Devices.GetTable("SELECT * FROM tb_devices;", table)
   canIterate := true
-  checkCommand := ""
   while (canIterate !=-1)
   {
     canIterate := table.Next(tableRow)
@@ -126,19 +128,16 @@ AutoRun(command)
     uid := tableRow[16]
     if name
     {
-      checkCommand := "backup"
-      if (%command% = %checkCommand%)
+      if (command = checkBackup)
       {
         bufferDir := BackupRouter(uid)
         ClearBuffer(bufferDir)
       }
-      checkCommand := "firmware"
-      if (%command% = %checkCommand%)
+      else if (command = checkFirmware)
       {
         SingleCommand(uid, "/system routerboard upgrade")
       }
-      checkCommand := "rOS"
-      if (%command% = %checkCommand%)
+      else if (command = checkROS)
       {
         SingleCommand(uid, "/system package update install")
       }
