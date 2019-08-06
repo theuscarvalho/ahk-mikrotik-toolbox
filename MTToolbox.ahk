@@ -2,7 +2,7 @@
 ; Organization: Lake Country Technology
 ; Database Structure
 ; Table: tb_devices
-; Keys: Device Name, hostname, username, password, tier, manufacturer, OS Version, Firmware Version, zip code, contact name, contact email, last backup status, model number
+; Keys: Device Name, hostname, username, password, winport, manufacturer, OS Version, Firmware Version, zip code, contact name, contact email, last backup status, model number
 
 #Include Class_SQLiteDB.ahk
 #NoEnv
@@ -14,7 +14,7 @@ Devices := New SQLiteDB
 if !Devices.OpenDB("devices.db", "W", false)
 {
   Devices.OpenDB("devices.db")
-  Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String, tier String, manufacturer String, os String, firmware String, zip String, contactname String, contactemail String, bstatus String, model String, port String, bGroup String, uid String);")
+  Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String, winport String, manufacturer String, os String, firmware String, zip String, contactname String, contactemail String, bstatus String, model String, port String, bGroup String, uid String);")
 }
 Devices.GetTable("SELECT * FROM tb_devices;", table)
 
@@ -88,6 +88,8 @@ ObjHasValue(Obj, Value, Ret := 0) {
 ;Wait to draw GUI until after flags are processed
 Gui, Show,, MikroTik Toolbox
 LV_ModifyCol(1, "AutoHdr")
+LV_ModifyCol(2, "AutoHdr")
+LV_ModifyCol(3, "AutoHdr")
 return
 
 ;Automatically backs up all devices and their /ip cloud info then exits the application
@@ -424,10 +426,11 @@ loop % LV_GetCount("S")
   }
   RowNumber := LV_GetNext(RowNumber)
   LV_GetText(uid, RowNumber, 4)
+  winport := GetCreds("winport", uid)
   username := GetCreds("username", uid)
   password := GetCreds("password", uid)
   hostname := GetCreds("hostname", uid)
-  runCMD := "winbox " . hostname . " " . username . " " . password
+  runCMD := "winbox " . hostname . ":" . winport . " " . username . " " . password
   run, %comspec% /c %runCMD% ,,hide
 }
 return
