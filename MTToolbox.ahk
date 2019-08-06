@@ -88,6 +88,8 @@ ObjHasValue(Obj, Value, Ret := 0) {
 ;Wait to draw GUI until after flags are processed
 Gui, Show,, MikroTik Toolbox
 LV_ModifyCol(1, "AutoHdr")
+LV_ModifyCol(2, "AutoHdr")
+LV_ModifyCol(3, "AutoHdr")
 return
 
 ;Automatically backs up all devices and their /ip cloud info then exits the application
@@ -424,10 +426,11 @@ loop % LV_GetCount("S")
   }
   RowNumber := LV_GetNext(RowNumber)
   LV_GetText(uid, RowNumber, 4)
+  winport := GetCreds("winport", uid)
   username := GetCreds("username", uid)
   password := GetCreds("password", uid)
   hostname := GetCreds("hostname", uid)
-  runCMD := "winbox " . hostname . " " . username . " " . password
+  runCMD := "winbox " . hostname . ":" . winport . " " . username . " " . password
   run, %comspec% /c %runCMD% ,,hide
 }
 return
