@@ -96,7 +96,7 @@ Add:
   GuiControlGet, ContactEmail
   GuiControlGet, Port
   FormatTime, uid, ,yyMMddHHmmss
-  if !Name or !Hostname or !Username or !Password or !Zip or !ContactName or !ContactEmail or !Port
+  if !Name or !Hostname or !Username or !Password or !Zip or !ContactName or !ContactEmail or !Port or !Winport or !Group
   {
     MsgBox, You have a blank field, router not stored.
     return
@@ -123,7 +123,7 @@ Update:
   GuiControlGet, ContactName
   GuiControlGet, ContactEmail
   GuiControlGet, Port
-  if !Name or !Hostname or !Username or !Password or !Zip or !ContactName or !ContactEmail or !Port
+  if !Name or !Hostname or !Username or !Password or !Zip or !ContactName or !ContactEmail or !Port or !Winport or !Group
   {
     MsgBox, You have a blank field, router config not updated.
     return
