@@ -3,6 +3,12 @@
 SendMode Input
 SetWorkingDir %A_ScriptDir%
 
+;Variables for logging
+formattime, date, , MM-dd-yy
+ifNotExist, logs\
+  FileCreateDir, logs\
+logFile := "logs\" date . ".txt"
+
 Gui, Add, GroupBox, xp+6 yp+5 w1000 h750, Commands
 Gui, Add, Text, xp+5 yp+15, Friendly Name
 Gui, Add, Edit, yp+15 r1 w160 vName,
@@ -63,6 +69,16 @@ Gui, Show,, Edit MT Clients
 
 return
 
+writeLog(text, severity)
+{
+  Global computerUser
+  Global logFile
+  formattime, logtime, ,HHmm
+  text := severity . " " . logtime . " - " . A_UserName . " " . text . "`n"
+  FileAppend, %text%, %logFile%
+  return
+}
+
 Clients:
 
 Add:
@@ -86,6 +102,8 @@ Add:
   {
     LV_Add(, Name, Hostname, Port, Username, Password, Winport, Zip, ContactName, ContactEmail, uid)
   }
+  toLog := "has added client " . Name . " to the database."
+  writeLog(toLog, "INFO")
   return
 
 Update:
@@ -132,18 +150,31 @@ Update:
   QUERY := "UPDATE tb_devices SET port = '" . newPort . "' WHERE uid = '" . uid . "';"
   Devices.Exec(QUERY)
   LV_Modify(row,"",newName,newHostname,newPort,newUsername,newPassword,newWinport,newZip,newContactName,newContactEmail,uid)
+  toLog := "has updated client " . Name . " in the database."
+  writeLog(toLog, "WARNING")
   return
 Delete:
-MsgBox, 4,, Are you sure you want to delete this router from the database?
-  IfMsgBox No
-    return
+  MsgBox, 4,, Are you sure you want to delete this router from the database?
+    IfMsgBox No
+      return
   row := LV_GetNext()
+  LV_GetText(name, row, 1)
+  LV_GetText(hostname, row, 2)
+  LV_GetText(port, row, 3)
+  LV_GetText(username, row, 4)
+  LV_GetText(password, row, 5)
+  LV_GetText(winport, row, 6)
+  LV_GetText(zip, row, 7)
+  LV_GetText(contactName, row, 8)
+  LV_GetText(contactEmail, row, 9)
   LV_GetText(DelUid, row, 10)
   QUERY := "DELETE FROM tb_devices WHERE uid='" . DelUid . "';"
   if (Devices.Exec(QUERY))
   {
     LV_Delete(row)
   }
+  toLog := "has deleted a client with the following info - Name: " . name . " Hostname: " . hostname . " SSH Port: " . port . " Username: " . username . " Password: " . password . " Winbox Port: " . winport . " Zip Code: " . zip . " Contact Name: " . contactName . " Contact Email Address: " . contactEmail
+  writeLog(toLog, "CRITICAL")
   return
 Retrieve:
   row := LV_GetNext()
