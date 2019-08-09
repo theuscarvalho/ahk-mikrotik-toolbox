@@ -314,6 +314,8 @@ BackupRouter(uid)
     {
       QUERY := "UPDATE tb_devices SET os = 'Failed Fetch' WHERE uid = '" . uid . "';"
       Devices.Exec(QUERY)
+      QUERY := "UPDATE tb_devices SET bstatus = 'Bad Credentials' WHERE uid ='" . uid . "';"
+      Devices.Exec(QUERY)
     }
   }
   else if FileExist(errorCheck1)
@@ -323,7 +325,7 @@ BackupRouter(uid)
   }
   else if FileExist(errorCheck2)
   {
-    QUERY := "UPDATE tb_devices SET bstatus = 'Bad Credentials' WHERE uid = '" . uid . "';"
+    QUERY := "UPDATE tb_devices SET bstatus = 'Could not establish connection' WHERE uid = '" . uid . "';"
     Devices.Exec(QUERY)
   }
   else
