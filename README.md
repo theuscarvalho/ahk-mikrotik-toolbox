@@ -1,10 +1,11 @@
 # ahk-mikrotik-toolbox
-MSP oriented toolbox for managing MikroTik routers and switches.
+MSP focused toolbox for managing MikroTik routers and switches.
 
 ### Dependencies: ###
 - [AHK-just-me's Class_SQLiteDB library](https://github.com/AHK-just-me/Class_SQLiteDB)
 - [SQLite](https://www.sqlite.org/download.html)
 - [Plink](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html)
+- [Winbox](https://mikrotik.com/download)
 
 ## Usage ##
 Command Line Flags:
@@ -15,7 +16,9 @@ Command Line Flags:
 
 `-ros` - Automatically updates all RouterOS packages on each router in the database and reboots
 
+`-group <group>` - Selects a grouping of routers to execute commands on (Optional)
+
 ## Screenshots ##
-![MTToolbox](https://i.imgur.com/FGikxMk.png)
-![Client Editing](https://i.imgur.com/bSPOjSZ.png)
-![DB Utility](https://i.imgur.com/3ArQmT2.png)
+![MTToolbox](https://i.imgur.com/8fuSMfj.png)
+![Client Editing](https://i.imgur.com/w7hPvHd.png)
+![DB Utility](https://i.imgur.com/4iJ2upu.png)
