@@ -25,7 +25,7 @@ if !Devices.OpenDB("devices.db", "W", false)
 Devices.GetTable("SELECT * FROM tb_devices;", table)
 
 ;Draw GUI
-Gui, Add, GroupBox, xp+6 yp+5 w700 h450, Commands
+Gui, Add, GroupBox, xp+6 yp+5 w1000 h750, Commands
 Gui, Add, Button, xp+5 yp+20 w120 gEdit, Edit Clients
 Gui, Add, Button, yp+25 w120 gCommand, Run Command
 Gui, Add, Button, yp+25 w120 gFirmware, Update Firmware
@@ -33,7 +33,7 @@ Gui, Add, Button, yp+25 w120 gRouterOS, Update RouterOS
 Gui, Add, Button, yp+25 w120 gBackup, Run Manual Backup
 Gui, Add, Button, yp+25 w120 gReboot, Reboot
 Gui, Add, Button, yp+25 w120 gWinbox, Winbox Session
-Gui, Add, ListView, yp-160 xp+125 w565 h435, Name|Hostname|Backup Status|OS Version|uid|Group
+Gui, Add, ListView, yp-160 xp+125 w865 h735, Name|Hostname|Backup Status|OS Version|uid|Group
 
 ;Loop to populate the listview
 canIterate := true
