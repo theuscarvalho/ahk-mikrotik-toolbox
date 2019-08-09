@@ -175,7 +175,7 @@ if !Devices.OpenDB("devices.db", "W", false)
 }
 if (BROne)
 {
-  FileSelectFile, exportTarget, S
+  FileSelectFile, exportTarget, S,DBBackup.csv,,Backups (*.txt; *.csv)
   Devices.GetTable("SELECT * FROM tb_devices;", table)
   canIterate := true
   while (canIterate != -1)
@@ -208,7 +208,7 @@ if (BROne)
 }
 else if (BRLegacy)
 {
-  FileSelectFile, exportTarget, S
+  FileSelectFile, exportTarget, S,DBBackup.csv,,Backups (*.txt; *.csv)
   Devices.GetTable("SELECT * FROM tb_devices;", table)
   canIterate := true
   while (canIterate != -1)
@@ -245,7 +245,7 @@ MsgBox, 4,, This will wipe your current database. Would you like to continue?
 writeLog("has started importing a backup configuration", "WARNING")
 if (BROne)
 {
-  FileSelectFile, importTarget, 3
+  FileSelectFile, importTarget, 3,,,Backups (*.txt; *.csv)
   QUERY := "DROP TABLE tb_devices;"
   Devices.Exec(QUERY)
   Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String, winport String, manufacturer String, os String, firmware String, zip String, contactname String, contactemail String, bstatus String, model String, port String, bGroup String, uid String);")
@@ -276,7 +276,7 @@ if (BROne)
 }
 else if (BRLegacy)
 {
-  FileSelectFile, importTarget, 3
+  FileSelectFile, importTarget, 3,,,Backups (*.txt; *.csv)
   QUERY := "DROP TABLE tb_devices;"
   Devices.Exec(QUERY)
   Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String);")
