@@ -21,13 +21,14 @@ Devices.GetTable("SELECT * FROM tb_devices;", table)
 ;Draw GUI
 Gui, Add, GroupBox, xp+6 yp+5 w1000 h750, Commands
 Gui, Add, Button, xp+5 yp+20 w120 gEdit, Edit Clients
+Gui, Add, Button,yp+25 w120 gDB, Database Utility
 Gui, Add, Button, yp+25 w120 gCommand, Run Command
 Gui, Add, Button, yp+25 w120 gFirmware, Update Firmware
 Gui, Add, Button, yp+25 w120 gRouterOS, Update RouterOS
 Gui, Add, Button, yp+25 w120 gBackup, Run Manual Backup
 Gui, Add, Button, yp+25 w120 gReboot, Reboot
 Gui, Add, Button, yp+25 w120 gWinbox, Winbox Session
-Gui, Add, ListView, yp-160 xp+125 w865 h735, Name|Hostname|Backup Status|OS Version|uid|Group
+Gui, Add, ListView, yp-185 xp+125 w865 h735, Name|Hostname|Backup Status|OS Version|uid|Group
 
 ;Loop to populate the listview
 canIterate := true
@@ -447,7 +448,29 @@ MultiCommand(uid, filePath)
 
 Edit:
   writeLog("has clicked the edit clients button", "INFO")
-  run, "MTClients.ahk"
+  binaryExist := FileExist("MTClients.exe")
+  if binaryExist
+  {
+    run, "MTClients.exe"
+  }
+  else
+  {
+    run, "MTClients.ahk"
+  }
+  Devices.CloseDB()
+  ExitApp
+return
+DB:
+  writeLog("has opened the database utility", "INFO")
+  binaryExist := FileExist("DBUtility.exe")
+  if binaryExist
+  {
+    run, "DBUtility.exe"
+  }
+  else
+  {
+    run, "DBUtility.ahk"
+  }
   Devices.CloseDB()
   ExitApp
 return

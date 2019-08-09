@@ -9,7 +9,7 @@ ifNotExist, logs\
   FileCreateDir, logs\
 logFile := "logs\" date . ".txt"
 
-Gui, Add, GroupBox, xp+6 yp+5 w200 h300, DB Utility
+Gui, Add, GroupBox, xp+6 yp+5 w200 h330, DB Utility
 Gui, font, bold
 Gui, Add, Text, xp+5 yp+15, Database Conversion
 Gui, font, normal
@@ -29,6 +29,8 @@ Gui, Add, Radio, vBRLegacy, Legacy
 Gui, Add, Radio, vBROne, 1
 Gui, Add, Button, yp+20 Default w80 gBackup, Backup
 Gui, Add, Button, yp+25 Default w80 gRestore, Restore
+
+Gui, Add, Button, yp+30 Default w80 gQuit, Quit
 
 Gui, Show
 
@@ -293,6 +295,21 @@ else if (BRLegacy)
 }
 else MsgBox, Error! No option selected!
 Devices.CloseDB()
+return
+
+Quit:
+writeLog("has opened the toolbox", "INFO")
+binaryExist := FileExist("MTToolbox.exe")
+if binaryExist
+{
+  run, "MTToolbox.exe"
+}
+else
+{
+  run, "MTToolbox.ahk"
+}
+Devices.CloseDB()
+ExitApp
 return
 
 GuiClose:

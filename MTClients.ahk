@@ -232,10 +232,18 @@ Blank:
   GuiControl,, ContactEmail,
   return
 Quit:
+  writeLog("has opened the toolbox", "INFO")
+  binaryExist := FileExist("MTToolbox.exe")
+  if binaryExist
+  {
+    run, "MTToolbox.exe"
+  }
+  else
+  {
+    run, "MTToolbox.ahk"
+  }
   Devices.CloseDB()
-  run, "MTToolbox.ahk"
   ExitApp
-  return
 return
 GuiClose:
 GuiEscape:
