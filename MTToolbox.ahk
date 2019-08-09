@@ -1,9 +1,3 @@
-; Author: Jonah Verner
-; Organization: Lake Country Technology
-; Database Structure
-; Table: tb_devices
-; Keys: Device Name, hostname, username, password, winport, manufacturer, OS Version, Firmware Version, zip code, contact name, contact email, last backup status, model number
-
 #Include Class_SQLiteDB.ahk
 #NoEnv
 SendMode Input
