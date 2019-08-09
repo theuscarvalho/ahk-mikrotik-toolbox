@@ -33,7 +33,7 @@ Gui, Add, Button, yp+25 w120 gRouterOS, Update RouterOS
 Gui, Add, Button, yp+25 w120 gBackup, Run Manual Backup
 Gui, Add, Button, yp+25 w120 gReboot, Reboot
 Gui, Add, Button, yp+25 w120 gWinbox, Winbox Session
-Gui, Add, ListView, yp-160 xp+125 w565 h435, Name|Hostname|Backup Status|uid
+Gui, Add, ListView, yp-160 xp+125 w565 h435, Name|Hostname|Backup Status|uid|Group
 
 ;Loop to populate the listview
 canIterate := true
@@ -43,10 +43,11 @@ while (canIterate == true)
   name := tableRow[1]
   hostname := tableRow[2]
   bStatus := tableRow[12]
+  group := tableRow[15]
   uid := tableRow[16]
   if name
   {
-    LV_Add("", name, hostname, bStatus, uid)
+    LV_Add("", name, hostname, bStatus, uid, group)
   }
 }
 LV_ModifyCol(4, 0)
@@ -62,6 +63,11 @@ Loop, %0%
 
 Loop %0%
 {
+  If (ObjHasValue(Args, "-group"))
+  {
+    AutoRunGroup()
+    break
+  }
   If (ObjHasValue(Args, "-backup"))
   {
     writeLog("has initiated an automatic backup", "INFO")
@@ -99,6 +105,7 @@ Gui, Show,, MikroTik Toolbox
 LV_ModifyCol(1, "AutoHdr")
 LV_ModifyCol(2, "AutoHdr")
 LV_ModifyCol(3, "AutoHdr")
+LV_ModifyCol(5, "AutoHdr")
 LV_ModifyCol(1, "Sort")
 return
 
@@ -112,14 +119,71 @@ writeLog(text, severity)
   return
 }
 
+AutoRunGroup()
+{
+  Global Args
+  Global 0
+  groupPos := 1
+  checkFor := "-group"
+  breakNext := false
+  targetGroup := -2
+  for k, v in Args
+  {
+    if breakNext
+    {
+      targetGroup := v
+      break
+    }
+    if (v = checkFor)
+    {
+      breakNext := true
+    }
+  }
+  if (targetGroup = -2)
+  {
+    writeLog("has attempted to run commands on a group but an error occurred", "WARNING")
+    return
+  }
+  Loop %0%
+  {
+    If (ObjHasValue(Args, "-backup"))
+    {
+      toLog := "has initiated an automatic backup on group " . targetGroup
+      writeLog(toLog, "INFO")
+  		AutoRun("backup", targetGroup)
+    }
+    If (ObjHasValue(Args, "-firmware"))
+    {
+      toLog := "has initiated an automatic firmware upgrade on group " . targetGroup
+      writeLog(toLog, "WARNING")
+  		AutoRun("firmware", targetGroup)
+    }
+    If (ObjHasValue(Args, "-ros"))
+    {
+      toLog := "has initiated an automatic routerOS upgrade" . targetGroup
+      writeLog(toLog, "WARNING")
+  		AutoRun("rOS", targetGroup)
+    }
+  }
+  return
+}
+
 ;Automatically backs up all devices and their /ip cloud info then exits the application
-AutoRun(command)
+AutoRun(command, targetGroup := -1)
 {
   checkBackup := "backup"
   checkFirmware := "firmware"
   checkROS := "rOS"
+  checkGroup := -1
   Global Devices
-  Devices.GetTable("SELECT * FROM tb_devices;", table)
+  if (targetGroup = checkGroup)
+  {
+    Devices.GetTable("SELECT * FROM tb_devices;", table)
+  }
+  else
+  {
+    Devices.GetTable("SELECT * FROM tb_devices WHERE bGroup='" . targetGroup . "';", table)
+  }
   canIterate := true
   while (canIterate !=-1)
   {
