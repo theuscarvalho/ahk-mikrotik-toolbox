@@ -33,7 +33,7 @@ Gui, Add, Button, yp+25 w120 gRouterOS, Update RouterOS
 Gui, Add, Button, yp+25 w120 gBackup, Run Manual Backup
 Gui, Add, Button, yp+25 w120 gReboot, Reboot
 Gui, Add, Button, yp+25 w120 gWinbox, Winbox Session
-Gui, Add, ListView, yp-160 xp+125 w565 h435, Name|Hostname|Backup Status|uid
+Gui, Add, ListView, yp-160 xp+125 w565 h435, Name|Hostname|Backup Status|uid|Group
 
 ;Loop to populate the listview
 canIterate := true
@@ -43,10 +43,11 @@ while (canIterate == true)
   name := tableRow[1]
   hostname := tableRow[2]
   bStatus := tableRow[12]
+  group := tableRow[15]
   uid := tableRow[16]
   if name
   {
-    LV_Add("", name, hostname, bStatus, uid)
+    LV_Add("", name, hostname, bStatus, uid, group)
   }
 }
 LV_ModifyCol(4, 0)
@@ -104,6 +105,7 @@ Gui, Show,, MikroTik Toolbox
 LV_ModifyCol(1, "AutoHdr")
 LV_ModifyCol(2, "AutoHdr")
 LV_ModifyCol(3, "AutoHdr")
+LV_ModifyCol(5, "AutoHdr")
 LV_ModifyCol(1, "Sort")
 return
 
