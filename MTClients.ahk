@@ -101,6 +101,11 @@ Add:
     MsgBox, You have a blank field, router not stored.
     return
   }
+  IfInString, Group, -
+  {
+    MsgBox, Illegal Character in group name '-'
+    return
+  }
   QUERY := "INSERT INTO tb_devices VALUES ('" . Name . "','" . Hostname . "','" . Username . "','" . Password . "','" . Winport . "','MikroTik', '0', '0', '" . Zip . "', '" . ContactName . "', '" . ContactEmail . "', 'fail', '0', '" . Port . "', '" . group . "', '" . uid . "');"
   if Devices.Exec(QUERY)
   {
@@ -123,6 +128,11 @@ Update:
   GuiControlGet, ContactName
   GuiControlGet, ContactEmail
   GuiControlGet, Port
+  IfInString, Group, -
+  {
+    MsgBox, Illegal Character '-' in group name
+    return
+  }
   if !Name or !Hostname or !Username or !Password or !Zip or !ContactName or !ContactEmail or !Port or !Winport or !Group
   {
     MsgBox, You have a blank field, router config not updated.
