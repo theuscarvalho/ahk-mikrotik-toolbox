@@ -62,6 +62,11 @@ Loop, %0%
 
 Loop %0%
 {
+  If (ObjHasValue(Args, "-group"))
+  {
+    AutoRunGroup()
+    break
+  }
   If (ObjHasValue(Args, "-backup"))
   {
     writeLog("has initiated an automatic backup", "INFO")
@@ -112,14 +117,71 @@ writeLog(text, severity)
   return
 }
 
+AutoRunGroup()
+{
+  Global Args
+  Global 0
+  groupPos := 1
+  checkFor := "-group"
+  breakNext := false
+  targetGroup := -2
+  for k, v in Args
+  {
+    if breakNext
+    {
+      targetGroup := v
+      break
+    }
+    if (v = checkFor)
+    {
+      breakNext := true
+    }
+  }
+  if (targetGroup = -2)
+  {
+    writeLog("has attempted to run commands on a group but an error occurred", "WARNING")
+    return
+  }
+  Loop %0%
+  {
+    If (ObjHasValue(Args, "-backup"))
+    {
+      toLog := "has initiated an automatic backup on group " . targetGroup
+      writeLog(toLog, "INFO")
+  		AutoRun("backup", targetGroup)
+    }
+    If (ObjHasValue(Args, "-firmware"))
+    {
+      toLog := "has initiated an automatic firmware upgrade on group " . targetGroup
+      writeLog(toLog, "WARNING")
+  		AutoRun("firmware", targetGroup)
+    }
+    If (ObjHasValue(Args, "-ros"))
+    {
+      toLog := "has initiated an automatic routerOS upgrade" . targetGroup
+      writeLog(toLog, "WARNING")
+  		AutoRun("rOS", targetGroup)
+    }
+  }
+  return
+}
+
 ;Automatically backs up all devices and their /ip cloud info then exits the application
-AutoRun(command)
+AutoRun(command, targetGroup := -1)
 {
   checkBackup := "backup"
   checkFirmware := "firmware"
   checkROS := "rOS"
+  checkGroup := -1
   Global Devices
-  Devices.GetTable("SELECT * FROM tb_devices;", table)
+  if (targetGroup = checkGroup)
+  {
+    Devices.GetTable("SELECT * FROM tb_devices;", table)
+  }
+  else
+  {
+    Devices.GetTable("SELECT * FROM tb_devices WHERE bGroup='" . targetGroup . "';", table)
+  }
   canIterate := true
   while (canIterate !=-1)
   {
