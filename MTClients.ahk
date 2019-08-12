@@ -110,6 +110,7 @@ Add:
   toAdd.Push(Port)
   FormatTime, uid, ,yyMMddHHmmss
   comma := ","
+  apostrophe := "'"
   for k, v in toAdd
   {
     if !v
@@ -128,6 +129,11 @@ Add:
     IfInString, v, %comma%
     {
       MsgBox, Illegal Character ',' in a field
+      return
+    }
+    IfInString, v, %apostrophe%
+    {
+      MsgBox, Illegal Character ''' in a field
       return
     }
   }
@@ -165,6 +171,7 @@ Update:
   GuiControlGet, Port
   toUpdate.Push(Port)
   comma := ","
+  apostrophe := "'"
   for k, v in toUpdate
   {
     if !v
@@ -183,6 +190,11 @@ Update:
     IfInString, v, %comma%
     {
       MsgBox, Illegal Character ',' in a field
+      return
+    }
+    IfInString, v, %apostrophe%
+    {
+      MsgBox, Illegal Character ''' in a field
       return
     }
   }
