@@ -98,6 +98,7 @@ ObjHasValue(Obj, Value, Ret := 0) {
 
 ;Wait to draw GUI until after flags are processed
 Gui, Show,, MikroTik Toolbox
+;Format the columns
 LV_ModifyCol(1, "AutoHdr")
 LV_ModifyCol(2, "AutoHdr")
 LV_ModifyCol(3, "AutoHdr")
@@ -106,6 +107,9 @@ LV_ModifyCol(6, "AutoHdr")
 LV_ModifyCol(1, "Sort")
 return
 
+;Function WriteLog: Writes log with format <severity> <time> - <local user> <text>
+;Parameters: String text, String severity
+;Returns: None
 writeLog(text, severity)
 {
   Global computerUser
@@ -116,6 +120,9 @@ writeLog(text, severity)
   return
 }
 
+;Function AutoRunGroup: Determines if a group has been specified in Args and then runs AutoRun with those arguments
+;Parameters: None
+;Returns: None
 AutoRunGroup()
 {
   Global Args
@@ -165,7 +172,9 @@ AutoRunGroup()
   return
 }
 
-;Automatically backs up all devices and their /ip cloud info then exits the application
+;Function Autorun - Automatically runs a specified command on a target group (all if not specified)
+;Parameters: String command, String group
+;Returns: None
 AutoRun(command, targetGroup := -1)
 {
   checkBackup := "backup"

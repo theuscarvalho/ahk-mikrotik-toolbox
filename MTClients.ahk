@@ -9,6 +9,7 @@ ifNotExist, logs\
   FileCreateDir, logs\
 logFile := "logs\" date . ".txt"
 
+;Draw GUI
 Gui, Add, GroupBox, xp+6 yp+5 w1000 h750, Commands
 Gui, Add, Text, xp+5 yp+15, Friendly Name
 Gui, Add, Edit, yp+15 r1 w160 vName,
@@ -38,6 +39,7 @@ Gui, Add, Button, yp+25 w160 gBlank, Blank Fields
 Gui, Add, Button, yp+25 w160 gQuit, Quit Editing
 Gui, Add, ListView, yp-530 xp+165 w825 h735 -Multi vClients, Name|Hostname|SSH Port|Username|Password|Winbox Port|Group|Zip Code|Contact Name|Contact Email|uid
 
+;Attempts to open DB and creates it if it does not already exist
 Devices := New SQLiteDB
 if !Devices.OpenDB("devices.db", "W", false)
 {
