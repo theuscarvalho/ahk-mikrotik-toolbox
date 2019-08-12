@@ -6,6 +6,4 @@
 *.def
 /*.txt
 /logs
-Class_SQLiteDB
-Class_SQLiteDB.ahk
 FeatureList.txt
