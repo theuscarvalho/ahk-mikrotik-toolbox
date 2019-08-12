@@ -1,6 +1,6 @@
 /backups
 /buffer
-*.exe
+winbox.exe
 *.db
 *.def
 /*.txt
