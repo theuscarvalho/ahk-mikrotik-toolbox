@@ -2,7 +2,6 @@
 MSP focused toolbox for managing MikroTik routers and switches.
 
 ### Dependencies: ###
-- [SQLite](https://www.sqlite.org/download.html)
 - [Plink](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html)
 - [Winbox](https://mikrotik.com/download)
 

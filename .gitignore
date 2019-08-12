@@ -2,7 +2,6 @@
 /buffer
 *.exe
 *.db
-*.dll
 *.def
 /*.txt
 /logs
