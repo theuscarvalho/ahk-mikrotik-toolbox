@@ -1,11 +1,8 @@
 /backups
 /buffer
-*.exe
+winbox.exe
 *.db
-*.dll
 *.def
 /*.txt
 /logs
-Class_SQLiteDB
-Class_SQLiteDB.ahk
 FeatureList.txt

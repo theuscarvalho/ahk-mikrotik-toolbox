@@ -9,6 +9,7 @@ ifNotExist, logs\
   FileCreateDir, logs\
 logFile := "logs\" date . ".txt"
 
+;Draw GUI
 Gui, Add, GroupBox, xp+6 yp+5 w1000 h750, Commands
 Gui, Add, Text, xp+5 yp+15, Friendly Name
 Gui, Add, Edit, yp+15 r1 w160 vName,
@@ -38,6 +39,7 @@ Gui, Add, Button, yp+25 w160 gBlank, Blank Fields
 Gui, Add, Button, yp+25 w160 gQuit, Quit Editing
 Gui, Add, ListView, yp-530 xp+165 w825 h735 -Multi vClients, Name|Hostname|SSH Port|Username|Password|Winbox Port|Group|Zip Code|Contact Name|Contact Email|uid
 
+;Attempts to open DB and creates it if it does not already exist
 Devices := New SQLiteDB
 if !Devices.OpenDB("devices.db", "W", false)
 {
@@ -85,26 +87,55 @@ writeLog(text, severity)
 Clients:
 
 Add:
+  toAdd := []
   GuiControlGet, Name
+  toAdd.Push(Name)
   GuiControlGet, Hostname
+  toAdd.Push(Hostname)
   GuiControlGet, Username
+  toAdd.Push(Username)
   GuiControlGet, Password
+  toAdd.Push(Password)
   GuiControlGet, Winport
+  toAdd.Push(Winport)
   GuiControlGet, Group
+  toAdd.Push(Group)
   GuiControlGet, Zip
+  toAdd.Push(Zip)
   GuiControlGet, ContactName
+  toAdd.Push(ContactName)
   GuiControlGet, ContactEmail
+  toAdd.Push(ContactEmail)
   GuiControlGet, Port
+  toAdd.Push(Port)
   FormatTime, uid, ,yyMMddHHmmss
-  if !Name or !Hostname or !Username or !Password or !Zip or !ContactName or !ContactEmail or !Port or !Winport or !Group
+  comma := ","
+  apostrophe := "'"
+  for k, v in toAdd
   {
-    MsgBox, You have a blank field, router not stored.
-    return
-  }
-  IfInString, Group, -
-  {
-    MsgBox, Illegal Character in group name '-'
-    return
+    if !v
+    {
+      MsgBox, You have a blank field, router not stored.
+      return
+    }
+    if (k = 6)
+    {
+      IfInString, Group, -
+      {
+        MsgBox, Illegal Character '-' in group name
+        return
+      }
+    }
+    IfInString, v, %comma%
+    {
+      MsgBox, Illegal Character ',' in a field
+      return
+    }
+    IfInString, v, %apostrophe%
+    {
+      MsgBox, Illegal Character ''' in a field
+      return
+    }
   }
   QUERY := "INSERT INTO tb_devices VALUES ('" . Name . "','" . Hostname . "','" . Username . "','" . Password . "','" . Winport . "','MikroTik', '0', '0', '" . Zip . "', '" . ContactName . "', '" . ContactEmail . "', 'fail', '0', '" . Port . "', '" . group . "', '" . uid . "');"
   if Devices.Exec(QUERY)
@@ -116,27 +147,56 @@ Add:
   return
 
 Update:
+  toUpdate := []
   row := LV_GetNext()
   LV_GetText(uid, row, 11)
   GuiControlGet, Name
+  toUpdate.Push(Name)
   GuiControlGet, Hostname
+  toUpdate.Push(Hostname)
   GuiControlGet, Username
+  toUpdate.Push(Username)
   GuiControlGet, Password
+  toUpdate.Push(Password)
   GuiControlGet, Winport
+  toUpdate.Push(Winport)
   GuiControlGet, Group
+  toUpdate.Push(Group)
   GuiControlGet, Zip
+  toUpdate.Push(Zip)
   GuiControlGet, ContactName
+  toUpdate.Push(ContactName)
   GuiControlGet, ContactEmail
+  toUpdate.Push(ContactEmail)
   GuiControlGet, Port
-  IfInString, Group, -
+  toUpdate.Push(Port)
+  comma := ","
+  apostrophe := "'"
+  for k, v in toUpdate
   {
-    MsgBox, Illegal Character '-' in group name
-    return
-  }
-  if !Name or !Hostname or !Username or !Password or !Zip or !ContactName or !ContactEmail or !Port or !Winport or !Group
-  {
-    MsgBox, You have a blank field, router config not updated.
-    return
+    if !v
+    {
+      MsgBox, You have a blank field, router config not updated.
+      return
+    }
+    if (k = 6)
+    {
+      IfInString, v, -
+      {
+        MsgBox, Illegal Character '-' in group name
+        return
+      }
+    }
+    IfInString, v, %comma%
+    {
+      MsgBox, Illegal Character ',' in a field
+      return
+    }
+    IfInString, v, %apostrophe%
+    {
+      MsgBox, Illegal Character ''' in a field
+      return
+    }
   }
   newName := Name
   newHostname := Hostname

@@ -9,6 +9,7 @@ ifNotExist, logs\
   FileCreateDir, logs\
 logFile := "logs\" date . ".txt"
 
+;Draw GUI
 Gui, Add, GroupBox, xp+6 yp+5 w200 h330, DB Utility
 Gui, font, bold
 Gui, Add, Text, xp+5 yp+15, Database Conversion
@@ -36,6 +37,9 @@ Gui, Show
 
 return
 
+;Function WriteLog: Writes log with format <severity> <time> - <local user> <text>
+;Parameters: String text, String severity
+;Returns: None
 writeLog(text, severity)
 {
   Global computerUser
