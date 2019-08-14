@@ -18,36 +18,6 @@ if !Devices.OpenDB("devices.db", "W", false)
 }
 Devices.GetTable("SELECT * FROM tb_devices;", table)
 
-;Draw GUI
-Gui, Add, GroupBox, xp+6 yp+5 w1000 h750, Commands
-Gui, Add, Button, xp+5 yp+20 w120 gEdit, Edit Clients
-Gui, Add, Button,yp+25 w120 gDB, Database Utility
-Gui, Add, Button, yp+25 w120 gCommand, Run Command
-Gui, Add, Button, yp+25 w120 gFirmware, Update Firmware
-Gui, Add, Button, yp+25 w120 gRouterOS, Update RouterOS
-Gui, Add, Button, yp+25 w120 gBackup, Run Manual Backup
-Gui, Add, Button, yp+25 w120 gReboot, Reboot
-Gui, Add, Button, yp+25 w120 gWinbox, Winbox Session
-Gui, Add, ListView, yp-185 xp+125 w865 h735, Name|Hostname|Backup Status|OS Version|uid|Group
-
-;Loop to populate the listview
-canIterate := true
-while (canIterate == true)
-{
-  canIterate := table.Next(tableRow)
-  name := tableRow[1]
-  hostname := tableRow[2]
-  bStatus := tableRow[12]
-  os := tableRow[7]
-  group := tableRow[15]
-  uid := tableRow[16]
-  if name
-  {
-    LV_Add("", name, hostname, bStatus, os, uid, group)
-  }
-}
-LV_ModifyCol(5, 0)
-
 ;Deletes buffer and recreates directory on startup
 FileRemoveDir buffer\, 1
 FileCreateDir buffer
@@ -96,13 +66,41 @@ ObjHasValue(Obj, Value, Ret := 0) {
 	Return False
 }
 
+DrawMain:
+Gui, Main:Default
+Gui, Main:Add, GroupBox, xp+6 yp+5 w1000 h750, Commands
+Gui, Main:Add, Button, xp+5 yp+20 w120 gEdit, Edit Clients
+Gui, Main:Add, Button,yp+25 w120 gDB, Database Utility
+Gui, Main:Add, Button, yp+25 w120 gCommand, Run Command
+Gui, Main:Add, Button, yp+25 w120 gFirmware, Update Firmware
+Gui, Main:Add, Button, yp+25 w120 gRouterOS, Update RouterOS
+Gui, Main:Add, Button, yp+25 w120 gBackup, Run Manual Backup
+Gui, Main:Add, Button, yp+25 w120 gReboot, Reboot
+Gui, Main:Add, Button, yp+25 w120 gWinbox, Winbox Session
+Gui, Main:Add, ListView, yp-185 xp+125 w865 h735, Name|Hostname|Backup Status|OS Version|uid|Group
+canIterate := true
+while (canIterate == true)
+{
+  canIterate := table.Next(tableRow)
+  name := tableRow[1]
+  hostname := tableRow[2]
+  bStatus := tableRow[12]
+  os := tableRow[7]
+  group := tableRow[15]
+  uid := tableRow[16]
+  if name
+  {
+    LV_Add("", name, hostname, bStatus, os, uid, group)
+  }
+}
 ;Wait to draw GUI until after flags are processed
-Gui, Show,, MikroTik Toolbox
+Gui, Main:Show,, MikroTik Toolbox
 ;Format the columns
 LV_ModifyCol(1, "AutoHdr")
 LV_ModifyCol(2, "AutoHdr")
 LV_ModifyCol(3, "AutoHdr")
 LV_ModifyCol(4, "AutoHdr")
+LV_ModifyCol(5, 0)
 LV_ModifyCol(6, "AutoHdr")
 LV_ModifyCol(1, "Sort")
 return
@@ -576,7 +574,7 @@ loop % LV_GetCount("S")
 }
 return
 
-GuiClose:
-GuiEscape:
-Devices.CloseDB()
+MainGuiClose:
+MainGuiEscape:
+MainDevices.CloseDB()
 ExitApp
