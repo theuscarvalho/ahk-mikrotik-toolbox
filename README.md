@@ -9,6 +9,8 @@ Command Line Flags:
 
 `-backup` - Automatically backs up all routers in the database using the commands found in /scripts/backup.txt
 
+'-backupDB' Automatically backs up the SQLite database to backups\DB
+
 `-firmware` - Automatically updates the RouterBoard firmware of each router in the database
 
 `-ros` - Automatically updates all RouterOS packages on each router in the database and reboots
@@ -16,6 +18,5 @@ Command Line Flags:
 `-group <group>` - Selects a grouping of routers to execute commands on (Optional)
 
 ## Screenshots ##
-![MTToolbox](https://i.imgur.com/8fuSMfj.png)
-![Client Editing](https://i.imgur.com/w7hPvHd.png)
-![DB Utility](https://i.imgur.com/4iJ2upu.png)
+![MTToolbox](https://i.imgur.com/QIpE5fk.png)
+![Client Editing](https://i.imgur.com/AnFntYR.png)
