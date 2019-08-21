@@ -180,6 +180,7 @@ Edit:
 Command:
   writeLog("has clicked the command button", "INFO")
   FileSelectFile, commandTarget
+  RowNumber := 0
   loop % LV_GetCount("S")
   {
     if not RowNumber
@@ -196,6 +197,7 @@ Firmware:
   MsgBox, 4,, Are you sure you want to update firmware?
     IfMsgBox No
       return
+  RowNumber := 0
   loop % LV_GetCount("S")
   {
     if not RowNumber
@@ -208,11 +210,12 @@ Firmware:
   }
   MsgBox, Firmware upgrade commands have been sent, please reboot the routers to complete upgrade.
   return
-  RouterOS:
+RouterOS:
   writeLog("has clicked the upgrade routerOS button", "INFO")
   MsgBox, 4,, Are you sure you want to update these routers? This will automatically reboot them.
     IfMsgBox No
       return
+  RowNumber := 0
   loop % LV_GetCount("S")
   {
     if not RowNumber
@@ -226,6 +229,7 @@ Firmware:
   return
 backup:
   writeLog("has clicked the backup button", "INFO")
+  RowNumber := 0
   loop % LV_GetCount("S")
   {
     if not RowNumber
@@ -243,6 +247,7 @@ reboot:
   MsgBox, 4,, Are you sure you want to reboot these routers?
     IfMsgBox No
       return
+  RowNumber := 0
   loop % LV_GetCount("S")
   {
     if not RowNumber
@@ -256,6 +261,7 @@ reboot:
   return
 winbox:
   writeLog("has started a Winbox session", "WARNING")
+  RowNumber := 0
   loop % LV_GetCount("S")
   {
     if not RowNumber
@@ -274,6 +280,7 @@ winbox:
   return
 Putty:
   writeLog("has started a putty session", "WARNING")
+  RowNumber := 0
   loop % LV_GetCount("S")
   {
     if not RowNumber
