@@ -35,6 +35,11 @@ Loop %0%
     AutoRunGroup()
     break
   }
+  If (ObjHasValue(Args, "-backupDB"))
+  {
+    BackupDB()
+    ExitApp
+  }
   If (ObjHasValue(Args, "-backup"))
   {
     writeLog("has initiated an automatic backup", "INFO")
@@ -49,11 +54,6 @@ Loop %0%
   {
     writeLog("has initiated an automatic routerOS upgrade", "WARNING")
 		AutoRun("rOS")
-  }
-  If (ObjHasValue(Args, "-backupDB"))
-  {
-    BackupDB()
-    ExitApp
   }
 }
 ObjHasValue(Obj, Value, Ret := 0) {
