@@ -49,6 +49,11 @@ Loop %0%
     writeLog("has initiated an automatic routerOS upgrade", "WARNING")
 		AutoRun("rOS")
   }
+  If (ObjHasValue(Args, "-backupDB"))
+  {
+    BackupDB()
+    ExitApp
+  }
 }
 ObjHasValue(Obj, Value, Ret := 0) {
 	For Key, Val in Obj {
@@ -881,7 +886,18 @@ BackupDB()
     port := tableRow[14]
     bgroup := tableRow[15]
     uid := tableRow[16]
-    row := name . "," . hostname . "," . username . "," . password . "," . winport . "," . manufacturer . "," . os . "," . firmware . "," . zip . "," . contactname . "," . contactemail . "," . bstatus . "," . model . "," . port . "," . bgroup . "," . uid . "`n"
+    if tableRow.MaxIndex() = 16
+    {
+      row := name . "," . hostname . "," . username . "," . password . "," . winport . "," . manufacturer . "," . os . "," . firmware . "," . zip . "," . contactname . "," . contactemail . "," . bstatus . "," . model . "," . port . "," . bgroup . "," . uid . "`n"
+    }
+    else if tableRow.MaxIndex() = 4
+    {
+      row := name . "," . hostname . "," . username . "," . password . "`n"
+    }
+    else
+    {
+      row := "Error `n"
+    }
     if name
     {
       FileAppend, %row%, %exportTarget%
