@@ -75,14 +75,13 @@ DrawMain:
   Gui, Main:Default
   Gui, Main:Add, GroupBox, xp+6 yp+5 w1000 h750, Commands
   Gui, Main:Add, Button, xp+5 yp+20 w120 gEdit, Edit Clients
-  Gui, Main:Add, Button,yp+25 w120 gDB, Database Utility
   Gui, Main:Add, Button, yp+25 w120 gCommand, Run Command
   Gui, Main:Add, Button, yp+25 w120 gFirmware, Update Firmware
   Gui, Main:Add, Button, yp+25 w120 gRouterOS, Update RouterOS
   Gui, Main:Add, Button, yp+25 w120 gBackup, Run Manual Backup
   Gui, Main:Add, Button, yp+25 w120 gReboot, Reboot
   Gui, Main:Add, Button, yp+25 w120 gWinbox, Winbox Session
-  Gui, Main:Add, ListView, yp-185 xp+125 w865 h735, Name|Hostname|Backup Status|OS Version|uid|Group
+  Gui, Main:Add, ListView, yp-160 xp+125 w865 h735, Name|Hostname|Backup Status|OS Version|uid|Group
   Devices.GetTable("SELECT * FROM tb_devices;", table)
   canIterate := true
   while (canIterate == true)
@@ -109,7 +108,7 @@ DrawMain:
   LV_ModifyCol(5, 0)
   LV_ModifyCol(6, "AutoHdr")
   LV_ModifyCol(1, "Sort")
-return
+  return
 
 Edit:
   Gui, Main:Destroy
@@ -171,20 +170,7 @@ Edit:
   LV_ModifyCol(1, "Sort")
   Gui, Edit:Show,, Edit MT Clients
   return
-DB:
-  writeLog("has opened the database utility", "INFO")
-  binaryExist := FileExist("DBUtility.exe")
-  if binaryExist
-  {
-    run, "DBUtility.exe"
-  }
-  else
-  {
-    run, "DBUtility.ahk"
-  }
-  Devices.CloseDB()
-  ExitApp
-  return
+
 Command:
   writeLog("has clicked the command button", "INFO")
   FileSelectFile, commandTarget
