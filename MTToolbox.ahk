@@ -240,7 +240,6 @@ backup:
     LV_GetText(uid, RowNumber, 5)
     BackupRouter(uid)
   }
-  Rownumber := 0
   return
 reboot:
   writeLog("has clicked the reboot button", "INFO")
@@ -714,7 +713,6 @@ ClearBuffer(directory)
 BackupRouter(uid)
 {
   Global Devices
-  OpenDB()
   hostname := GetCreds("hostname", uid)
   name := GetCreds("name", uid)
   directory := "backups\"
@@ -733,6 +731,7 @@ BackupRouter(uid)
   {
     LogMultiCommand(uid, fileName, commands, bufferDir)
   }
+  OpenDB()
   if FileExist(fileName)
   {
     QUERY := "UPDATE tb_devices SET bstatus = 'Success' WHERE uid = '" . uid . "';"
