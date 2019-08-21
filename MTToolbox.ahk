@@ -16,37 +16,7 @@ if !Devices.OpenDB("devices.db", "W", false)
   Devices.OpenDB("devices.db")
   Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String, winport String, manufacturer String, os String, firmware String, zip String, contactname String, contactemail String, bstatus String, model String, port String, bGroup String, uid String);")
 }
-Devices.GetTable("SELECT * FROM tb_devices;", table)
-
-;Draw GUI
-Gui, Add, GroupBox, xp+6 yp+5 w1000 h750, Commands
-Gui, Add, Button, xp+5 yp+20 w120 gEdit, Edit Clients
-Gui, Add, Button,yp+25 w120 gDB, Database Utility
-Gui, Add, Button, yp+25 w120 gCommand, Run Command
-Gui, Add, Button, yp+25 w120 gFirmware, Update Firmware
-Gui, Add, Button, yp+25 w120 gRouterOS, Update RouterOS
-Gui, Add, Button, yp+25 w120 gBackup, Run Manual Backup
-Gui, Add, Button, yp+25 w120 gReboot, Reboot
-Gui, Add, Button, yp+25 w120 gWinbox, Winbox Session
-Gui, Add, ListView, yp-185 xp+125 w865 h735, Name|Hostname|Backup Status|OS Version|uid|Group
-
-;Loop to populate the listview
-canIterate := true
-while (canIterate == true)
-{
-  canIterate := table.Next(tableRow)
-  name := tableRow[1]
-  hostname := tableRow[2]
-  bStatus := tableRow[12]
-  os := tableRow[7]
-  group := tableRow[15]
-  uid := tableRow[16]
-  if name
-  {
-    LV_Add("", name, hostname, bStatus, os, uid, group)
-  }
-}
-LV_ModifyCol(5, 0)
+CheckDBVersion()
 
 ;Deletes buffer and recreates directory on startup
 FileRemoveDir buffer\, 1
@@ -79,6 +49,11 @@ Loop %0%
     writeLog("has initiated an automatic routerOS upgrade", "WARNING")
 		AutoRun("rOS")
   }
+  If (ObjHasValue(Args, "-backupDB"))
+  {
+    BackupDB()
+    ExitApp
+  }
 }
 ObjHasValue(Obj, Value, Ret := 0) {
 	For Key, Val in Obj {
@@ -96,16 +71,438 @@ ObjHasValue(Obj, Value, Ret := 0) {
 	Return False
 }
 
-;Wait to draw GUI until after flags are processed
-Gui, Show,, MikroTik Toolbox
-;Format the columns
-LV_ModifyCol(1, "AutoHdr")
-LV_ModifyCol(2, "AutoHdr")
-LV_ModifyCol(3, "AutoHdr")
-LV_ModifyCol(4, "AutoHdr")
-LV_ModifyCol(6, "AutoHdr")
-LV_ModifyCol(1, "Sort")
+DrawMain:
+  Gui, Main:Default
+  Gui, Main:Add, GroupBox, xp+6 yp+5 w1000 h750, Commands
+  Gui, Main:Add, Button, xp+5 yp+20 w120 gEdit, Edit Clients
+  Gui, Main:Add, Button, yp+25 w120 gCommand, Run Command
+  Gui, Main:Add, Button, yp+25 w120 gFirmware, Update Firmware
+  Gui, Main:Add, Button, yp+25 w120 gRouterOS, Update RouterOS
+  Gui, Main:Add, Button, yp+25 w120 gBackup, Run Manual Backup
+  Gui, Main:Add, Button, yp+25 w120 gReboot, Reboot
+  Gui, Main:Add, Button, yp+25 w120 gWinbox, Winbox Session
+  Gui, Main:Add, ListView, yp-160 xp+125 w865 h735, Name|Hostname|Backup Status|OS Version|uid|Group
+  Devices.GetTable("SELECT * FROM tb_devices;", table)
+  canIterate := true
+  while (canIterate == true)
+  {
+    canIterate := table.Next(tableRow)
+    name := tableRow[1]
+    hostname := tableRow[2]
+    bStatus := tableRow[12]
+    os := tableRow[7]
+    group := tableRow[15]
+    uid := tableRow[16]
+    if name
+    {
+      LV_Add("", name, hostname, bStatus, os, uid, group)
+    }
+  }
+  ;Wait to draw GUI until after flags are processed
+  Gui, Main:Show,, MikroTik Toolbox
+  ;Format the columns
+  LV_ModifyCol(1, "AutoHdr")
+  LV_ModifyCol(2, "AutoHdr")
+  LV_ModifyCol(3, "AutoHdr")
+  LV_ModifyCol(4, "AutoHdr")
+  LV_ModifyCol(5, 0)
+  LV_ModifyCol(6, "AutoHdr")
+  LV_ModifyCol(1, "Sort")
+  return
+
+Edit:
+  Gui, Main:Destroy
+  Gui, Edit:Default
+  writeLog("has clicked the edit clients button", "INFO")
+  Gui, Edit:Add, GroupBox, xp+6 yp+5 w1000 h750, Commands
+  Gui, Edit:Add, Text, xp+5 yp+15, Friendly Name
+  Gui, Edit:Add, Edit, yp+15 r1 w160 vName,
+  Gui, Edit:Add, Text, yp+25, Hostname
+  Gui, Edit:Add, Edit, yp+15 r1 w160 vHostname,
+  Gui, Edit:Add, Text, yp+25, SSH Port
+  Gui, Edit:Add, Edit, yp+15 r1 w160 vPort,22
+  Gui, Edit:Add, Text, yp+25, Username
+  Gui, Edit:Add, Edit, yp+15 r1 w160 vUsername,
+  Gui, Edit:Add, Text, yp+25, Password
+  Gui, Edit:Add, Edit, yp+15 r1 w160 vPassword,
+  Gui, Edit:Add, Text, yp+25, Winbox Port
+  Gui, Edit:Add, Edit, yp+15 r1 w160 vWinport,8291
+  Gui, Edit:Add, Text, yp+25, Group
+  Gui, Edit:Add, Edit, yp+15 r1 w160 vGroup,none
+  Gui, Edit:Add, Text, yp+25, Zip Code
+  Gui, Edit:Add, Edit, yp+15 r1 w160 vZip,
+  Gui, Edit:Add, Text, yp+25, Contact Name
+  Gui, Edit:Add, Edit, yp+15 r1 w160 vContactName,
+  Gui, Edit:Add, Text, yp+25, Contact Email
+  Gui, Edit:Add, Edit, yp+15 r1 w160 vContactEmail,
+  Gui, Edit:Add, Button, yp+25 r1 w160 gAdd, Add Client
+  Gui, Edit:Add, Button, yp+25 w160 gUpdate, Update Config
+  Gui, Edit:Add, Button, yp+25 w160 gDelete, Delete Client
+  Gui, Edit:Add, Button, yp+25 w160 gRetrieve, Retrieve Selected
+  Gui, Edit:Add, Button, yp+25 w160 gBlank, Blank Fields
+  Gui, Edit:Add, Button, yp+25 w160 gBackupDB, Back Up Database
+  Gui, Edit:Add, Button, yp+25 w160 gRestoreDB, Restore Database
+  Gui, Edit:Add, Button, yp+25 w160 gQuit, Quit Editing
+  Gui, Edit:Add, ListView, yp-580 xp+165 w825 h735 -Multi vClients, Name|Hostname|SSH Port|Username|Password|Winbox Port|Group|Zip Code|Contact Name|Contact Email|uid
+  Devices.GetTable("SELECT * FROM tb_devices;", table)
+  canIterate := true
+  while (canIterate == true)
+  {
+    canIterate := table.Next(tableRow)
+    name := tableRow[1]
+    hostname := tableRow[2]
+    username := tableRow[3]
+    password := tableRow[4]
+    winport := tableRow[5]
+    zip := tableRow[9]
+    contactName := tableRow[10]
+    contactEmail := tableRow[11]
+    port := tableRow[14]
+    group := tableRow[15]
+    uid := tableRow[16]
+    if name
+    {
+      LV_Add("", name, hostname, port, username, password, winport, group, zip, contactName, contactEmail, uid)
+    }
+  }
+  LV_ModifyCol(11, 0)
+  LV_ModifyCol(1, "AutoHdr")
+  LV_ModifyCol(1, "Sort")
+  Gui, Edit:Show,, Edit MT Clients
+  return
+
+Command:
+  writeLog("has clicked the command button", "INFO")
+  FileSelectFile, commandTarget
+  loop % LV_GetCount("S")
+  {
+    if not RowNumber
+    {
+      Rownumber := 0
+    }
+    RowNumber := LV_GetNext(RowNumber)
+    LV_GetText(uid, RowNumber, 5)
+    MultiCommand(uid, commandTarget)
+  }
+  return
+Firmware:
+  writeLog("has clicked the upgrade firmware button", "INFO")
+  MsgBox, 4,, Are you sure you want to update firmware?
+    IfMsgBox No
+      return
+  loop % LV_GetCount("S")
+  {
+    if not RowNumber
+    {
+      Rownumber := 0
+    }
+    RowNumber := LV_GetNext(RowNumber)
+    LV_GetText(uid, RowNumber, 5)
+    SingleCommand(uid, "/system routerboard upgrade")
+  }
+  MsgBox, Firmware upgrade commands have been sent, please reboot the routers to complete upgrade.
+  return
+  RouterOS:
+  writeLog("has clicked the upgrade routerOS button", "INFO")
+  MsgBox, 4,, Are you sure you want to update these routers? This will automatically reboot them.
+    IfMsgBox No
+      return
+  loop % LV_GetCount("S")
+  {
+    if not RowNumber
+    {
+      Rownumber := 0
+    }
+    RowNumber := LV_GetNext(RowNumber)
+    LV_GetText(uid, RowNumber, 5)
+    SingleCommand(uid, "/system package update install")
+  }
+  return
+backup:
+  writeLog("has clicked the backup button", "INFO")
+  loop % LV_GetCount("S")
+  {
+    if not RowNumber
+    {
+      Rownumber := 0
+    }
+    RowNumber := LV_GetNext(RowNumber)
+    LV_GetText(uid, RowNumber, 5)
+    BackupRouter(uid)
+  }
+  Rownumber := 0
+  return
+reboot:
+  writeLog("has clicked the reboot button", "INFO")
+  MsgBox, 4,, Are you sure you want to reboot these routers?
+    IfMsgBox No
+      return
+  loop % LV_GetCount("S")
+  {
+    if not RowNumber
+    {
+      Rownumber := 0
+    }
+    RowNumber := LV_GetNext(RowNumber)
+    LV_GetText(uid, RowNumber, 5)
+    SingleCommand(uid, "/system reboot")
+  }
+  return
+winbox:
+  writeLog("has started a Winbox session", "WARNING")
+  loop % LV_GetCount("S")
+  {
+    if not RowNumber
+    {
+      Rownumber := 0
+    }
+    RowNumber := LV_GetNext(RowNumber)
+    LV_GetText(uid, RowNumber, 5)
+    winport := GetCreds("winport", uid)
+    username := GetCreds("username", uid)
+    password := GetCreds("password", uid)
+    hostname := GetCreds("hostname", uid)
+    runCMD := "winbox " . hostname . ":" . winport . " " . username . " " . password
+    run, %comspec% /c %runCMD% ,,hide
+  }
+  return
+Add:
+  toAdd := []
+  GuiControlGet, Name
+  toAdd.Push(Name)
+  GuiControlGet, Hostname
+  toAdd.Push(Hostname)
+  GuiControlGet, Username
+  toAdd.Push(Username)
+  GuiControlGet, Password
+  toAdd.Push(Password)
+  GuiControlGet, Winport
+  toAdd.Push(Winport)
+  GuiControlGet, Group
+  toAdd.Push(Group)
+  GuiControlGet, Zip
+  toAdd.Push(Zip)
+  GuiControlGet, ContactName
+  toAdd.Push(ContactName)
+  GuiControlGet, ContactEmail
+  toAdd.Push(ContactEmail)
+  GuiControlGet, Port
+  toAdd.Push(Port)
+  FormatTime, uid, ,yyMMddHHmmss
+  comma := ","
+  apostrophe := "'"
+  space := " "
+  for k, v in toAdd
+  {
+    if !v
+    {
+      MsgBox, You have a blank field, router not stored.
+      return
+    }
+    if (k = 6)
+    {
+      IfInString, Group, -
+      {
+        MsgBox, Illegal Character '-' in group name
+        return
+      }
+      IfInString, Group, %space%
+      {
+        MsgBox, Space is an illegal character in group name
+        return
+      }
+    }
+    IfInString, v, %comma%
+    {
+      MsgBox, Illegal Character ',' in a field
+      return
+    }
+    IfInString, v, %apostrophe%
+    {
+      MsgBox, Illegal Character ''' in a field
+      return
+    }
+  }
+  QUERY := "INSERT INTO tb_devices VALUES ('" . Name . "','" . Hostname . "','" . Username . "','" . Password . "','" . Winport . "','MikroTik', '0', '0', '" . Zip . "', '" . ContactName . "', '" . ContactEmail . "', 'fail', '0', '" . Port . "', '" . group . "', '" . uid . "');"
+  if Devices.Exec(QUERY)
+  {
+    LV_Add(, Name, Hostname, Port, Username, Password, Winport, Group, Zip, ContactName, ContactEmail, uid)
+  }
+  toLog := "has added client " . Name . " to the database."
+  writeLog(toLog, "INFO")
+  return
+Update:
+  toUpdate := []
+  row := LV_GetNext()
+  LV_GetText(uid, row, 11)
+  GuiControlGet, Name
+  toUpdate.Push(Name)
+  GuiControlGet, Hostname
+  toUpdate.Push(Hostname)
+  GuiControlGet, Username
+  toUpdate.Push(Username)
+  GuiControlGet, Password
+  toUpdate.Push(Password)
+  GuiControlGet, Winport
+  toUpdate.Push(Winport)
+  GuiControlGet, Group
+  toUpdate.Push(Group)
+  GuiControlGet, Zip
+  toUpdate.Push(Zip)
+  GuiControlGet, ContactName
+  toUpdate.Push(ContactName)
+  GuiControlGet, ContactEmail
+  toUpdate.Push(ContactEmail)
+  GuiControlGet, Port
+  toUpdate.Push(Port)
+  comma := ","
+  apostrophe := "'"
+  space := " "
+  for k, v in toUpdate
+  {
+    if !v
+    {
+      MsgBox, You have a blank field, router config not updated.
+      return
+    }
+    if (k = 6)
+    {
+      IfInString, v, -
+      {
+        MsgBox, Illegal Character '-' in group name
+        return
+      }
+      IfInString, Group, %space%
+      {
+        MsgBox, Space is an illegal character in group name
+        return
+      }
+    }
+    IfInString, v, %comma%
+    {
+      MsgBox, Illegal Character ',' in a field
+      return
+    }
+    IfInString, v, %apostrophe%
+    {
+      MsgBox, Illegal Character ''' in a field
+      return
+    }
+  }
+  newName := Name
+  newHostname := Hostname
+  newUsername := Username
+  newPassword := Password
+  newWinport := Winport
+  newGroup := Group
+  newZip := Zip
+  newContactName := ContactName
+  newContactEmail := ContactEmail
+  newPort := Port
+  QUERY := "UPDATE tb_devices SET hostname = '" . newHostname . "' WHERE uid = '" . uid . "';"
+  Devices.Exec(QUERY)
+  QUERY := "UPDATE tb_devices SET name = '" . newName . "' WHERE uid = '" . uid . "';"
+  Devices.Exec(QUERY)
+  QUERY := "UPDATE tb_devices SET username = '" . newUsername . "' WHERE uid = '" . uid . "';"
+  Devices.Exec(QUERY)
+  QUERY := "UPDATE tb_devices SET password = '" . newPassword . "' WHERE uid = '" . uid . "';"
+  Devices.Exec(QUERY)
+  QUERY := "UPDATE tb_devices SET winport = '" . newWinport . "' WHERE uid = '" . uid . "';"
+  Devices.Exec(QUERY)
+  QUERY := "UPDATE tb_devices SET bGroup = '" . newGroup . "' WHERE uid = '" . uid . "';"
+  Devices.Exec(QUERY)
+  QUERY := "UPDATE tb_devices SET zip = '" . newZip . "' WHERE uid = '" . uid . "';"
+  Devices.Exec(QUERY)
+  QUERY := "UPDATE tb_devices SET contactname = '" . newContactName . "' WHERE uid = '" . uid . "';"
+  Devices.Exec(QUERY)
+  QUERY := "UPDATE tb_devices SET contactemail = '" . newContactEmail . "' WHERE uid = '" . uid . "';"
+  Devices.Exec(QUERY)
+  QUERY := "UPDATE tb_devices SET port = '" . newPort . "' WHERE uid = '" . uid . "';"
+  Devices.Exec(QUERY)
+  LV_Modify(row,"",newName,newHostname,newPort,newUsername,newPassword,newWinport,newGroup,newZip,newContactName,newContactEmail,uid)
+  toLog := "has updated client " . Name . " in the database."
+  writeLog(toLog, "WARNING")
+  return
+Delete:
+  MsgBox, 4,, Are you sure you want to delete this router from the database?
+    IfMsgBox No
+      return
+  row := LV_GetNext()
+  LV_GetText(name, row, 1)
+  LV_GetText(hostname, row, 2)
+  LV_GetText(port, row, 3)
+  LV_GetText(username, row, 4)
+  LV_GetText(password, row, 5)
+  LV_GetText(winport, row, 6)
+  LV_GetText(group, row, 7)
+  LV_GetText(zip, row, 8)
+  LV_GetText(contactName, row, 9)
+  LV_GetText(contactEmail, row, 10)
+  LV_GetText(DelUid, row, 11)
+  QUERY := "DELETE FROM tb_devices WHERE uid='" . DelUid . "';"
+  if (Devices.Exec(QUERY))
+  {
+    LV_Delete(row)
+  }
+  toLog := "has deleted a client with the following info - Name: " . name . " Hostname: " . hostname . " SSH Port: " . port . " Username: " . username . " Password: " . password . " Winbox Port: " . winport . " Group: " . group . " Zip Code: " . zip . " Contact Name: " . contactName . " Contact Email Address: " . contactEmail
+  writeLog(toLog, "CRITICAL")
+  return
+Retrieve:
+  row := LV_GetNext()
+  LV_GetText(name, row, 1)
+  LV_GetText(hostname, row, 2)
+  LV_GetText(port, row, 3)
+  LV_GetText(username, row, 4)
+  LV_GetText(password, row, 5)
+  LV_GetText(winport, row, 6)
+  LV_GetText(group, row, 7)
+  LV_GetText(zip, row, 8)
+  LV_GetText(contactName, row, 9)
+  LV_GetText(contactEmail, row, 10)
+  GuiControl,, Name, %name%
+  GuiControl,, Hostname, %hostname%
+  GuiControl,, Port, %port%
+  GuiControl,, Username, %username%
+  GuiControl,, Password, %password%
+  GuiControl,, Winport, %winport%
+  GuiControl,, Group, %group%
+  GuiControl,, Zip, %zip%
+  GuiControl,, ContactName, %contactName%
+  GuiControl,, ContactEmail, %contactEmail%
+  return
+Blank:
+  GuiControl,, Name,
+  GuiControl,, Hostname,
+  GuiControl,, Port,22
+  GuiControl,, Username,
+  GuiControl,, Password,
+  GuiControl,, Winport,8291
+  GuiControl,, Group,none
+  GuiControl,, Zip,
+  GuiControl,, ContactName,
+  GuiControl,, ContactEmail,
+  return
+BackupDB:
+  BackupDB()
+  return
+RestoreDB:
+  Gui, Edit:Destroy
+  RestoreDB()
+  GoSub, Edit
+  return
+Quit:
+  writeLog("has opened the toolbox", "INFO")
+  Gui, Edit:Destroy
+  Gosub, DrawMain
+  return
 return
+
+EditGuiClose:
+EditGuiEscape:
+MainGuiClose:
+MainGuiEscape:
+Devices.CloseDB()
+ExitApp
 
 ;Function WriteLog: Writes log with format <severity> <time> - <local user> <text>
 ;Parameters: String text, String severity
@@ -455,128 +852,180 @@ MultiCommand(uid, filePath)
   return
 }
 
-Edit:
-  writeLog("has clicked the edit clients button", "INFO")
-  binaryExist := FileExist("MTClients.exe")
-  if binaryExist
-  {
-    run, "MTClients.exe"
-  }
-  else
-  {
-    run, "MTClients.ahk"
-  }
-  Devices.CloseDB()
-  ExitApp
-return
-DB:
-  writeLog("has opened the database utility", "INFO")
-  binaryExist := FileExist("DBUtility.exe")
-  if binaryExist
-  {
-    run, "DBUtility.exe"
-  }
-  else
-  {
-    run, "DBUtility.ahk"
-  }
-  Devices.CloseDB()
-  ExitApp
-return
-Command:
-writeLog("has clicked the command button", "INFO")
-FileSelectFile, commandTarget
-loop % LV_GetCount("S")
+; Function BackupDB. Backs up DB to either csv or txt file. CSV file recommended for easy browing by external applications
+; Parameters: None. 
+; Returns: None.
+BackupDB()
 {
-  if not RowNumber
+  Global Devices
+  directory := "backups\DB\"
+  ifNotExist, %directory%
+    FileCreateDir, %directory%
+  formattime, date, , MM-dd-yyyy_HHmm
+  exportTarget := directory . date . ".csv"
+  Devices.GetTable("SELECT * FROM tb_devices;", table)
+  canIterate := true
+  while (canIterate != -1)
   {
-    Rownumber := 0
+    canIterate := table.Next(tableRow)
+    name := tableRow[1]
+    hostname := tableRow[2]
+    username := tableRow[3]
+    password := tableRow[4]
+    winport := tableRow[5]
+    manufacturer := tableRow[6]
+    os := tableRow[7]
+    firmware := tableRow[8]
+    zip := tableRow[9]
+    contactname := tableRow[10]
+    contactemail := tableRow[11]
+    bstatus := tableRow[12]
+    model := tableRow[13]
+    port := tableRow[14]
+    bgroup := tableRow[15]
+    uid := tableRow[16]
+    if tableRow.MaxIndex() = 16
+    {
+      row := name . "," . hostname . "," . username . "," . password . "," . winport . "," . manufacturer . "," . os . "," . firmware . "," . zip . "," . contactname . "," . contactemail . "," . bstatus . "," . model . "," . port . "," . bgroup . "," . uid . "`n"
+    }
+    else if tableRow.MaxIndex() = 4
+    {
+      row := name . "," . hostname . "," . username . "," . password . "`n"
+    }
+    else
+    {
+      row := "Error `n"
+    }
+    if name
+    {
+      FileAppend, %row%, %exportTarget%
+    }
   }
-  RowNumber := LV_GetNext(RowNumber)
-  LV_GetText(uid, RowNumber, 5)
-  MultiCommand(uid, commandTarget)
+  toLog := "has backed up the database to file " . exportTarget
+  writeLog(toLog, "WARNING")
+  return
 }
-return
-Firmware:
-writeLog("has clicked the upgrade firmware button", "INFO")
-loop % LV_GetCount("S")
-{
-  if not RowNumber
-  {
-    Rownumber := 0
-  }
-  RowNumber := LV_GetNext(RowNumber)
-  LV_GetText(uid, RowNumber, 5)
-  SingleCommand(uid, "/system routerboard upgrade")
-}
-MsgBox, Firmware upgrade commands have been sent, please reboot the routers to complete upgrade.
-return
-RouterOS:
-writeLog("has clicked the upgrade routerOS button", "INFO")
-MsgBox, 4,, Are you sure you want to update these routers? This will automatically reboot them.
-  IfMsgBox No
-    return
-loop % LV_GetCount("S")
-{
-  if not RowNumber
-  {
-    Rownumber := 0
-  }
-  RowNumber := LV_GetNext(RowNumber)
-  LV_GetText(uid, RowNumber, 5)
-  SingleCommand(uid, "/system package update install")
-}
-return
-backup:
-writeLog("has clicked the backup button", "INFO")
-loop % LV_GetCount("S")
-{
-  if not RowNumber
-  {
-    Rownumber := 0
-  }
-  RowNumber := LV_GetNext(RowNumber)
-  LV_GetText(uid, RowNumber, 5)
-  BackupRouter(uid)
-}
-Rownumber := 0
-return
-reboot:
-writeLog("has clicked the reboot button", "INFO")
-MsgBox, 4,, Are you sure you want to reboot these routers?
-  IfMsgBox No
-    return
-loop % LV_GetCount("S")
-{
-  if not RowNumber
-  {
-    Rownumber := 0
-  }
-  RowNumber := LV_GetNext(RowNumber)
-  LV_GetText(uid, RowNumber, 5)
-  SingleCommand(uid, "/system reboot")
-}
-return
-winbox:
-writeLog("has started a Winbox session", "WARNING")
-loop % LV_GetCount("S")
-{
-  if not RowNumber
-  {
-    Rownumber := 0
-  }
-  RowNumber := LV_GetNext(RowNumber)
-  LV_GetText(uid, RowNumber, 5)
-  winport := GetCreds("winport", uid)
-  username := GetCreds("username", uid)
-  password := GetCreds("password", uid)
-  hostname := GetCreds("hostname", uid)
-  runCMD := "winbox " . hostname . ":" . winport . " " . username . " " . password
-  run, %comspec% /c %runCMD% ,,hide
-}
-return
 
-GuiClose:
-GuiEscape:
-Devices.CloseDB()
-ExitApp
+; Function RestoreDB. Retores database from either csv or txt file.
+; Parameters: None.
+; Returns: None.
+RestoreDB()
+{
+  Global Devices
+  MsgBox, 4,, This will wipe your current database. Would you like to continue?
+  IfMsgBox No
+    ExitApp
+  writeLog("has started importing a backup configuration", "WARNING")
+  FileSelectFile, importTarget, 3,,,Backups (*.txt; *.csv)
+  FileReadLine, targetLine, %importTarget%, 1
+  lineArr := StrSplit(targetLine, ",")
+  numCol := LineArr.MaxIndex()
+  if numCol = 16
+  {
+    QUERY := "DROP TABLE tb_devices;"
+    Devices.Exec(QUERY)
+    Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String, winport String, manufacturer String, os String, firmware String, zip String, contactname String, contactemail String, bstatus String, model String, port String, bGroup String, uid String);")
+    Loop, Read, %importTarget%
+    {
+      importArgs := StrSplit(A_LoopReadLine, ",")
+      name := "'" . importArgs[1] . "'"
+      hostname := "'" . importArgs[2] . "'"
+      username := "'" . importArgs[3] . "'"
+      password := "'" . importArgs[4] . "'"
+      winport := "'" . importArgs[5] . "'"
+      manufacturer := "'" . importArgs[6] . "'"
+      os := "'" . importArgs[7] . "'"
+      firmware := "'" . importArgs[8] . "'"
+      zip := "'" . importArgs[9] . "'"
+      contactname := "'" . importArgs[10] . "'"
+      contactemail := "'" . importArgs[11] . "'"
+      bstatus := "'" . importArgs[12] . "'"
+      model := "'" . importArgs[13] . "'"
+      port := "'" . importArgs[14] . "'"
+      bgroup := "'" . importArgs[15] . "'"
+      uid := "'" . importArgs[16] . "'"
+      SQL := "INSERT INTO tb_devices VALUES (" . name . "," . hostname . "," . username . "," . password . "," . winport . "," . manufacturer . "," . os . "," . firmware . "," . zip . "," . contactname . "," . contactemail . "," . bstatus . "," . model . "," . port . "," . bGroup . "," . uid . ");"
+      import := Devices.Exec(SQL)
+    }
+    toLog := "has imported a database from file " . importTarget
+    writeLog(toLog, "CRITICAL")
+  }
+  else if numCol = 4
+  {
+    QUERY := "DROP TABLE tb_devices;"
+    Devices.Exec(QUERY)
+    Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String);")
+    Loop, Read, %importTarget%
+    {
+      importArgs := StrSplit(A_LoopReadLine, ",")
+      name := "'" . importArgs[1] . "'"
+      hostname := "'" . importArgs[2] . "'"
+      username := "'" . importArgs[3] . "'"
+      password := "'" . importArgs[4] . "'"
+      SQL := "INSERT INTO tb_devices VALUES (" . name . "," . hostname . "," . username . "," . password . ");"
+      import := Devices.Exec(SQL)
+    }
+    toLog := "has imported a database from file " . importTarget
+    writeLog(toLog, "CRITICAL")
+  }
+  else
+  {
+    MsgBox, Unknown error when restoring from backup.
+  }
+  CheckDBVersion()
+  return
+}
+
+; Function CheckDBVersion. Checks which version of the database is being used and upgrades to latest revision if necessary.
+; Parameters: None.
+; Returns: None.
+CheckDBVersion()
+{
+  Global Devices
+  Devices.GetTable("SELECT * FROM tb_devices;", table)
+  table.Next(tableRow)
+  dbSize := tableRow.MaxIndex()
+  if dbSize = 4
+  {
+    BackupDB()
+    Devices.GetTable("SELECT * FROM tb_devices;", table)
+    canIterate := true
+    ifExist, conversionbuffer.txt
+      FileDelete, conversionbuffer.txt
+    while (canIterate == true)
+    {
+      canIterate := table.Next(tableRow)
+      name := tableRow[1]
+      hostname := tableRow[2]
+      username := tableRow[3]
+      password := tableRow[4]
+      row := name . "," . hostname . "," . username . "," . password . "`n"
+      if name
+      {
+        FileAppend, %row%, conversionbuffer.txt
+      }
+    }
+    ifNotExist, conversionbuffer.txt
+      MsgBox, Buffer creation failed, aborting!
+    ifNotExist, conversionbuffer.txt
+      return
+    QUERY := "DROP TABLE tb_devices;"
+    Devices.Exec(QUERY)
+    Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String, winport String, manufacturer String, os String, firmware String, zip String, contactname String, contactemail String, bstatus String, model String, port String, bGroup String, uid String);")
+    uid := 1
+    Loop, Read, conversionbuffer.txt
+    {
+      importArgs := StrSplit(A_LoopReadLine, ",")
+      name := "'" . importArgs[1] . "'"
+      hostname := "'" . importArgs[2] . "'"
+      username := "'" . importArgs[3] . "'"
+      password := "'" . importArgs[4] . "'"
+      SQL := "INSERT INTO tb_devices VALUES (" . name . "," . hostname . "," . username . "," . password . ", '8291', 'MikroTik', '0', '0', '1', 'John Doe', 'null@null', 'fail', '0', '22', 'none', '" . uid . "');"
+      import := Devices.Exec(SQL)
+      uid++
+    }
+    writeLog("has upgraded the database from version legacy to version 1", "CRITICAL")
+    MsgBox, Database converted!
+  }
+  return
+}
