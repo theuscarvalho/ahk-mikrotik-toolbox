@@ -850,12 +850,16 @@ MultiCommand(uid, filePath)
 }
 
 ; Function BackupDB. Backs up DB to either csv or txt file. CSV file recommended for easy browing by external applications
-; Parameters: None.
+; Parameters: None. 
 ; Returns: None.
 BackupDB()
 {
   Global Devices
-  FileSelectFile, exportTarget, S,DBBackup.csv,,Backups (*.txt; *.csv)
+  directory := "backups\DB\"
+  ifNotExist, %directory%
+    FileCreateDir, %directory%
+  formattime, date, , MM-dd-yyyy_HHmm
+  exportTarget := directory . date . ".csv"
   Devices.GetTable("SELECT * FROM tb_devices;", table)
   canIterate := true
   while (canIterate != -1)
@@ -969,10 +973,11 @@ CheckDBVersion()
   dbSize := tableRow.MaxIndex()
   if dbSize = 4
   {
-    MsgBox, Your database is about to be upgraded, please select a backup destination.
     BackupDB()
     Devices.GetTable("SELECT * FROM tb_devices;", table)
     canIterate := true
+    ifExist, conversionbuffer.txt
+      FileDelete, conversionbuffer.txt
     while (canIterate == true)
     {
       canIterate := table.Next(tableRow)
