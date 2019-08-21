@@ -16,6 +16,7 @@ if !Devices.OpenDB("devices.db", "W", false)
   Devices.OpenDB("devices.db")
   Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String, winport String, manufacturer String, os String, firmware String, zip String, contactname String, contactemail String, bstatus String, model String, port String, bGroup String, uid String);")
 }
+Devices.CloseDB()
 CheckDBVersion()
 
 ;Deletes buffer and recreates directory on startup
@@ -82,6 +83,7 @@ DrawMain:
   Gui, Main:Add, Button, yp+25 w120 gReboot, Reboot
   Gui, Main:Add, Button, yp+25 w120 gWinbox, Winbox Session
   Gui, Main:Add, ListView, yp-160 xp+125 w865 h735, Name|Hostname|Backup Status|OS Version|uid|Group
+  OpenDB()
   Devices.GetTable("SELECT * FROM tb_devices;", table)
   canIterate := true
   while (canIterate == true)
@@ -108,6 +110,7 @@ DrawMain:
   LV_ModifyCol(5, 0)
   LV_ModifyCol(6, "AutoHdr")
   LV_ModifyCol(1, "Sort")
+  Devices.CloseDB()
   return
 
 Edit:
@@ -144,6 +147,7 @@ Edit:
   Gui, Edit:Add, Button, yp+25 w160 gRestoreDB, Restore Database
   Gui, Edit:Add, Button, yp+25 w160 gQuit, Quit Editing
   Gui, Edit:Add, ListView, yp-580 xp+165 w825 h735 -Multi vClients, Name|Hostname|SSH Port|Username|Password|Winbox Port|Group|Zip Code|Contact Name|Contact Email|uid
+  OpenDB()
   Devices.GetTable("SELECT * FROM tb_devices;", table)
   canIterate := true
   while (canIterate == true)
@@ -169,6 +173,7 @@ Edit:
   LV_ModifyCol(1, "AutoHdr")
   LV_ModifyCol(1, "Sort")
   Gui, Edit:Show,, Edit MT Clients
+  Devices.CloseDB()
   return
 
 Command:
@@ -323,6 +328,7 @@ Add:
       return
     }
   }
+  OpenDB()
   QUERY := "INSERT INTO tb_devices VALUES ('" . Name . "','" . Hostname . "','" . Username . "','" . Password . "','" . Winport . "','MikroTik', '0', '0', '" . Zip . "', '" . ContactName . "', '" . ContactEmail . "', 'fail', '0', '" . Port . "', '" . group . "', '" . uid . "');"
   if Devices.Exec(QUERY)
   {
@@ -330,6 +336,7 @@ Add:
   }
   toLog := "has added client " . Name . " to the database."
   writeLog(toLog, "INFO")
+  Devices.CloseDB()
   return
 Update:
   toUpdate := []
@@ -399,6 +406,7 @@ Update:
   newContactName := ContactName
   newContactEmail := ContactEmail
   newPort := Port
+  OpenDB()
   QUERY := "UPDATE tb_devices SET hostname = '" . newHostname . "' WHERE uid = '" . uid . "';"
   Devices.Exec(QUERY)
   QUERY := "UPDATE tb_devices SET name = '" . newName . "' WHERE uid = '" . uid . "';"
@@ -422,6 +430,7 @@ Update:
   LV_Modify(row,"",newName,newHostname,newPort,newUsername,newPassword,newWinport,newGroup,newZip,newContactName,newContactEmail,uid)
   toLog := "has updated client " . Name . " in the database."
   writeLog(toLog, "WARNING")
+  Devices.CloseDB()
   return
 Delete:
   MsgBox, 4,, Are you sure you want to delete this router from the database?
@@ -439,6 +448,7 @@ Delete:
   LV_GetText(contactName, row, 9)
   LV_GetText(contactEmail, row, 10)
   LV_GetText(DelUid, row, 11)
+  OpenDB()
   QUERY := "DELETE FROM tb_devices WHERE uid='" . DelUid . "';"
   if (Devices.Exec(QUERY))
   {
@@ -446,6 +456,7 @@ Delete:
   }
   toLog := "has deleted a client with the following info - Name: " . name . " Hostname: " . hostname . " SSH Port: " . port . " Username: " . username . " Password: " . password . " Winbox Port: " . winport . " Group: " . group . " Zip Code: " . zip . " Contact Name: " . contactName . " Contact Email Address: " . contactEmail
   writeLog(toLog, "CRITICAL")
+  Devices.CloseDB()
   return
 Retrieve:
   row := LV_GetNext()
@@ -579,6 +590,7 @@ AutoRun(command, targetGroup := -1)
   checkROS := "rOS"
   checkGroup := -1
   Global Devices
+  OpenDB()
   if (targetGroup = checkGroup)
   {
     Devices.GetTable("SELECT * FROM tb_devices;", table)
@@ -643,10 +655,12 @@ CheckAlive(uid, name)
 GetCreds(type, uid)
 {
   Global Devices
+  OpenDB()
   QUERY := "SELECT " . type . " FROM tb_devices WHERE uid='" . uid . "';"
   Devices.Query(QUERY, resultQuery)
   resultQuery.Next(resultRow)
   result := resultRow[1]
+  Devices.CloseDB()
   return result
 }
 
@@ -672,6 +686,7 @@ ClearBuffer(directory)
 BackupRouter(uid)
 {
   Global Devices
+  OpenDB()
   hostname := GetCreds("hostname", uid)
   name := GetCreds("name", uid)
   directory := "backups\"
@@ -736,6 +751,7 @@ BackupRouter(uid)
   }
   toLog := "has backed up router with name " . name
   writeLog(toLog, "INFO")
+  Devices.CloseDB()
   return %bufferDir%
 }
 
@@ -745,6 +761,7 @@ BackupRouter(uid)
 LogCommand(uid, command, filename)
 {
   Global Devices
+  OpenDB()
   name := GetCreds("name", uid)
   username := GetCreds("username", uid)
   password := GetCreds("password", uid)
@@ -757,6 +774,7 @@ LogCommand(uid, command, filename)
   run, %comspec% /c %runCMD% ,,hide
   toLog := "has run command " . command . " on router with name " . name
   writeLog(toLog, "WARNING")
+  Devices.CloseDB()
   return
 }
 
@@ -858,6 +876,7 @@ MultiCommand(uid, filePath)
 BackupDB()
 {
   Global Devices
+  OpenDB()
   directory := "backups\DB\"
   ifNotExist, %directory%
     FileCreateDir, %directory%
@@ -903,6 +922,7 @@ BackupDB()
   }
   toLog := "has backed up the database to file " . exportTarget
   writeLog(toLog, "WARNING")
+  Devices.CloseDB()
   return
 }
 
@@ -912,6 +932,7 @@ BackupDB()
 RestoreDB()
 {
   Global Devices
+  OpenDB()
   MsgBox, 4,, This will wipe your current database. Would you like to continue?
   IfMsgBox No
     ExitApp
@@ -973,6 +994,7 @@ RestoreDB()
     MsgBox, Unknown error when restoring from backup.
   }
   CheckDBVersion()
+  Devices.CloseDB()
   return
 }
 
@@ -982,6 +1004,7 @@ RestoreDB()
 CheckDBVersion()
 {
   Global Devices
+  OpenDB()
   Devices.GetTable("SELECT * FROM tb_devices;", table)
   table.Next(tableRow)
   dbSize := tableRow.MaxIndex()
@@ -1027,5 +1050,16 @@ CheckDBVersion()
     writeLog("has upgraded the database from version legacy to version 1", "CRITICAL")
     MsgBox, Database converted!
   }
+  Devices.CloseDB()
+  return
+}
+
+; Function OpenDB. Opens the database used by the toolbox.
+; Parameters: None.
+; Returns: None.
+OpenDB()
+{
+  Global Devices
+  Devices.OpenDB("devices.db")
   return
 }
