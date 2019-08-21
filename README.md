@@ -9,7 +9,7 @@ Command Line Flags:
 
 `-backup` - Automatically backs up all routers in the database using the commands found in /scripts/backup.txt
 
-'-backupDB' Automatically backs up the SQLite database to backups\DB
+`-backupDB` Automatically backs up the SQLite database to backups\DB
 
 `-firmware` - Automatically updates the RouterBoard firmware of each router in the database
 
