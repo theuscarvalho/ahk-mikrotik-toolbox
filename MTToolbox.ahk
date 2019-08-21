@@ -82,7 +82,8 @@ DrawMain:
   Gui, Main:Add, Button, yp+25 w120 gBackup, Run Manual Backup
   Gui, Main:Add, Button, yp+25 w120 gReboot, Reboot
   Gui, Main:Add, Button, yp+25 w120 gWinbox, Winbox Session
-  Gui, Main:Add, ListView, yp-160 xp+125 w865 h735, Name|Hostname|Backup Status|OS Version|uid|Group
+  Gui, Main:Add, Button, yp+25 w120 gPutty, SSH Session
+  Gui, Main:Add, ListView, yp-185 xp+125 w865 h735, Name|Hostname|Backup Status|OS Version|uid|Group
   OpenDB()
   Devices.GetTable("SELECT * FROM tb_devices;", table)
   canIterate := true
@@ -268,6 +269,26 @@ winbox:
     password := GetCreds("password", uid)
     hostname := GetCreds("hostname", uid)
     runCMD := "winbox " . hostname . ":" . winport . " " . username . " " . password
+    run, %comspec% /c %runCMD% ,,hide
+  }
+  return
+Putty:
+  writeLog("has started a putty session", "WARNING")
+  loop % LV_GetCount("S")
+  {
+    if not RowNumber
+    {
+      Rownumber := 0
+    }
+    RowNumber := LV_GetNext(RowNumber)
+    LV_GetText(uid, RowNumber, 5)
+    sshport := GetCreds("port", uid)
+    username := GetCreds("username", uid)
+    password := GetCreds("password", uid)
+    hostname := GetCreds("hostname", uid)
+    clipboard := password
+    MsgBox, Password has been copied to clipboard.
+    runCMD := "putty.exe -ssh " . username . "@" . hostname . " " . port
     run, %comspec% /c %runCMD% ,,hide
   }
   return
