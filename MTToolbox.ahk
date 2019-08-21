@@ -305,6 +305,7 @@ Add:
   FormatTime, uid, ,yyMMddHHmmss
   comma := ","
   apostrophe := "'"
+  space := " "
   for k, v in toAdd
   {
     if !v
@@ -317,6 +318,11 @@ Add:
       IfInString, Group, -
       {
         MsgBox, Illegal Character '-' in group name
+        return
+      }
+      IfInString, Group, %space%
+      {
+        MsgBox, Space is an illegal character in group name
         return
       }
     }
@@ -365,6 +371,7 @@ Update:
   toUpdate.Push(Port)
   comma := ","
   apostrophe := "'"
+  space := " "
   for k, v in toUpdate
   {
     if !v
@@ -377,6 +384,11 @@ Update:
       IfInString, v, -
       {
         MsgBox, Illegal Character '-' in group name
+        return
+      }
+      IfInString, Group, %space%
+      {
+        MsgBox, Space is an illegal character in group name
         return
       }
     }
