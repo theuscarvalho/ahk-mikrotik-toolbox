@@ -664,7 +664,7 @@ CheckAlive(uid, name)
   run, %comspec% /c %runCMD% ,,hide
   Sleep 5000
   fileName := "buffer\" . name . ".txt"
-  patternSearch := "time="
+  patternSearch := "time"
   Loop, read, %fileName%
   {
     IfInString, A_LoopReadLine, %patternSearch%
