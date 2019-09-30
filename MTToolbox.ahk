@@ -73,6 +73,7 @@ ObjHasValue(Obj, Value, Ret := 0) {
 }
 
 DrawMain:
+  writeLog("has opened the toolbox", "INFO")
   Gui, Main:Default
   Gui, Main:Add, GroupBox, xp+6 yp+5 w1000 h750, Commands
   Gui, Main:Add, Button, xp+5 yp+20 w120 gEdit, Edit Clients
@@ -260,7 +261,7 @@ reboot:
   }
   return
 winbox:
-  writeLog("has started a Winbox session", "WARNING")
+  writeLog("has clicked the Winbox button", "INFO")
   RowNumber := 0
   loop % LV_GetCount("S")
   {
@@ -274,12 +275,15 @@ winbox:
     username := GetCreds("username", uid)
     password := GetCreds("password", uid)
     hostname := GetCreds("hostname", uid)
+    name := GetCreds("name", uid)
     runCMD := "winbox " . hostname . ":" . winport . " " . username . " " . password
+    toLog := "has started a winbox session with router " . name
+    writeLog(toLog, "WARNING")
     run, %comspec% /c %runCMD% ,,hide
   }
   return
 Putty:
-  writeLog("has started a putty session", "WARNING")
+  writeLog("has clicked the putty button", "INFO")
   RowNumber := 0
   loop % LV_GetCount("S")
   {
@@ -296,6 +300,8 @@ Putty:
     clipboard := password
     MsgBox, Password has been copied to clipboard.
     runCMD := "putty.exe -ssh " . username . "@" . hostname . " " . port
+    toLog := "has started an ssh session with router " . name
+    writeLog(toLog, "WARNING")
     run, %comspec% /c %runCMD% ,,hide
   }
   return
@@ -546,7 +552,6 @@ RestoreDB:
   GoSub, Edit
   return
 Quit:
-  writeLog("has opened the toolbox", "INFO")
   Gui, Edit:Destroy
   Gosub, DrawMain
   return
@@ -566,7 +571,7 @@ writeLog(text, severity)
 {
   Global computerUser
   Global logFile
-  formattime, logtime, ,HHmm
+  formattime, logtime, ,HH:mm:ss
   text := severity . " " . logtime . " - " . A_UserName . " " . text . "`n"
   FileAppend, %text%, %logFile%
   return
