@@ -120,7 +120,7 @@ Edit:
   Gui, Main:Destroy
   Gui, Edit:Default
   writeLog("has clicked the edit clients button", "INFO")
-  Gui, Edit:Add, GroupBox, xp+6 yp+5 w1000 h750, Commands
+  Gui, Edit:Add, GroupBox, xp+6 yp+5 w1000 h750, Client Info
   Gui, Edit:Add, Text, xp+5 yp+15, Friendly Name
   Gui, Edit:Add, Edit, yp+15 r1 w160 vName,
   Gui, Edit:Add, Text, yp+25, Hostname
