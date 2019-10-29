@@ -3,8 +3,6 @@
 SendMode Input
 SetWorkingDir %A_ScriptDir%
 
-dbName := "devices.db"
-
 ;Variables for logging
 formattime, date, , MM-dd-yy
 ifNotExist, logs\
@@ -13,12 +11,12 @@ logFile := "logs\" date . ".txt"
 
 ;Opens database and creates a new one if it does not currently exist
 Devices := New SQLiteDB
-if !Devices.OpenDB(dbName, "W", false)
+if !Devices.OpenDB("devices.db", "W", false)
 {
   MsgBox, 4,, Database with name %dbName% not found. Would you like to create it?
   IfMsgBox No
     ExitApp
-  Devices.OpenDB(dbName)
+  Devices.OpenDB("devices.db")
   Devices.Exec("CREATE TABLE tb_devices(name String, hostname String, username String, password String, winport String, manufacturer String, os String, firmware String, zip String, contactname String, contactemail String, bstatus String, model String, port String, bGroup String, uid String);")
   MsgBox, Database with name %dbName% created.
 }
@@ -1117,6 +1115,6 @@ CheckDBVersion()
 OpenDB()
 {
   Global Devices
-  Devices.OpenDB(dbName)
+  Devices.OpenDB("devices.db")
   return
 }
