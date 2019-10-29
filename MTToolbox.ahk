@@ -226,6 +226,8 @@ RouterOS:
     }
     RowNumber := LV_GetNext(RowNumber)
     LV_GetText(uid, RowNumber, 5)
+    SingleCommand(uid, "/system package update check-for-updates")
+    Sleep 500
     SingleCommand(uid, "/system package update install")
   }
   return
