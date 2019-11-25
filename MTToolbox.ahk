@@ -673,6 +673,8 @@ AutoRun(command, targetGroup := -1)
       }
       else if (command = checkROS)
       {
+        SingleCommand(uid, "/system package update check-for-updates")
+        Sleep 500
         SingleCommand(uid, "/system package update install")
       }
     }
