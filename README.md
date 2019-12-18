@@ -18,5 +18,5 @@ Command Line Flags:
 `-group <group>` - Selects a grouping of routers to execute commands on (Optional)
 
 ## Screenshots ##
-![MTToolbox](https://i.imgur.com/QIpE5fk.png)
-![Client Editing](https://i.imgur.com/AnFntYR.png)
+![MTToolbox](https://i.imgur.com/LBzTy4A.png)
+![Client Editing](https://i.imgur.com/w4X0Dsa.png)
