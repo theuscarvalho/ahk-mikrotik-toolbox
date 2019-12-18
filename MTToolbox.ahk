@@ -79,17 +79,18 @@ ObjHasValue(Obj, Value, Ret := 0) {
 DrawMain:
   writeLog("has opened the toolbox", "INFO")
   Gui, Main:Default
-  Gui, Main:Add, GroupBox, xp+6 yp+5 w1000 h750, Commands
-  Gui, Main:Add, Button, xp+5 yp+20 w120 gEdit, Edit Clients
-  Gui, Main:Add, Button, yp+25 w120 gCommand, Run Command
-  Gui, Main:Add, Button, yp+25 w120 gFirmware, Update Firmware
-  Gui, Main:Add, Button, yp+25 w120 gRouterOS, Update RouterOS
-  Gui, Main:Add, Button, yp+25 w120 gBackup, Run Manual Backup
-  Gui, Main:Add, Button, yp+25 w120 gReboot, Reboot
-  Gui, Main:Add, Button, yp+25 w120 gWinbox, Winbox Session
+  Gui, Main:Add, Groupbox, yp+5 w126 h220, Manage Routers
+  Gui, Main:Add, Button, xp+3 yp+20 w120 gWinbox, Winbox Session
   Gui, Main:Add, Button, yp+25 w120 gPutty, SSH Session
+  Gui, Main:Add, Button, yp+25 w120 gCommand, Run Command
+  Gui, Main:Add, Button, yp+25 w120 gRouterOS, Update RouterOS
+  Gui, Main:Add, Button, yp+25 w120 gFirmware, Update Firmware
+  Gui, Main:Add, Button, yp+25 w120 gBackup, Run Manual Backup
   Gui, Main:Add, Button, yp+25 w120 gCopyHost, Copy Hostname
-  Gui, Main:Add, ListView, yp-210 xp+125 w865 h735, Name|Hostname|Backup Status|OS Version|uid|Group
+  Gui, Main:Add, Button, yp+25 w120 gReboot, Reboot
+  Gui, Main:Add, Groupbox, xp-3 yp+30 w126 h45, Settings
+  Gui, Main:Add, Button, xp+3 yp+20 w120 gEdit, Edit Clients
+  Gui, Main:Add, ListView, yp-245 xp+125 w865 h735, Name|Hostname|Backup Status|OS Version|uid|Group
   OpenDB()
   Devices.GetTable("SELECT * FROM tb_devices;", table)
   canIterate := true
