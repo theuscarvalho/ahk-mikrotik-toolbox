@@ -79,17 +79,20 @@ ObjHasValue(Obj, Value, Ret := 0) {
 DrawMain:
   writeLog("has opened the toolbox", "INFO")
   Gui, Main:Default
-  Gui, Main:Add, Groupbox, yp+5 w126 h220, Manage Routers
+  Gui, Main:Add, Groupbox, yp+5 w126 h195, Manage Routers
   Gui, Main:Add, Button, xp+3 yp+20 w120 gWinbox, Winbox Session
   Gui, Main:Add, Button, yp+25 w120 gPutty, SSH Session
   Gui, Main:Add, Button, yp+25 w120 gCommand, Run Command
   Gui, Main:Add, Button, yp+25 w120 gRouterOS, Update RouterOS
   Gui, Main:Add, Button, yp+25 w120 gFirmware, Update Firmware
   Gui, Main:Add, Button, yp+25 w120 gBackup, Run Manual Backup
-  Gui, Main:Add, Button, yp+25 w120 gCopyHost, Copy Hostname
   Gui, Main:Add, Button, yp+25 w120 gReboot, Reboot
+  Gui, Main:Add, Groupbox, xp-3 yp+30 w126 h70, Copy Info
+  Gui, Main:Add, Button, xp+3 yp+20 w120 gCopyHost, Copy Hostname
+  Gui, Main:Add, Button, yp+25 w120 gCopyPass, Copy Password
   Gui, Main:Add, Groupbox, xp-3 yp+30 w126 h45, Settings
   Gui, Main:Add, Button, xp+3 yp+20 w120 gEdit, Edit Clients
+  
   Gui, Main:Add, ListView, yp-245 xp+125 w865 h735, Name|Hostname|Backup Status|OS Version|uid|Group
   OpenDB()
   Devices.GetTable("SELECT * FROM tb_devices;", table)
@@ -326,6 +329,22 @@ CopyHost:
     writeLog("has copied the hostname " . hostname . "to their clipboard", "INFO")
     clipboard := hostname
     MsgBox, Hostname has been copied to clipboard.
+  }
+  return
+CopyPass:
+  RowNumber := 0
+  loop % LV_GetCount("S")
+  {
+    if not RowNumber
+    {
+      Rownumber := 0
+    }
+    RowNumber := LV_GetNext(RowNumber)
+    LV_GetText(uid, RowNumber, 5)
+    password := GetCreds("password", uid)
+    writeLog("has copied the password for " . hostname . "to their clipboard", "INFO")
+    clipboard := password
+    MsgBox, password has been copied to clipboard.
   }
   return
 Add:
