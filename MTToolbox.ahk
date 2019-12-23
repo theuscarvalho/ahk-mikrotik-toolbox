@@ -93,7 +93,7 @@ DrawMain:
   Gui, Main:Add, Groupbox, xp-3 yp+30 w126 h45, Settings
   Gui, Main:Add, Button, xp+3 yp+20 w120 gEdit, Edit Clients
   
-  Gui, Main:Add, ListView, yp-245 xp+125 w865 h735, Name|Hostname|Backup Status|OS Version|uid|Group
+  Gui, Main:Add, ListView, yp-295 xp+125 w865 h735 gRouterList, Name|Hostname|Backup Status|OS Version|uid|Group
   OpenDB()
   Devices.GetTable("SELECT * FROM tb_devices;", table)
   canIterate := true
@@ -580,6 +580,12 @@ RestoreDB:
 Quit:
   Gui, Edit:Destroy
   Gosub, DrawMain
+  return
+RouterList:
+  if A_GuiEvent = DoubleClick
+  {
+    Goto, winbox
+  }
   return
 return
 
