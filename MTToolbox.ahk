@@ -79,17 +79,21 @@ ObjHasValue(Obj, Value, Ret := 0) {
 DrawMain:
   writeLog("has opened the toolbox", "INFO")
   Gui, Main:Default
-  Gui, Main:Add, GroupBox, xp+6 yp+5 w1000 h750, Commands
-  Gui, Main:Add, Button, xp+5 yp+20 w120 gEdit, Edit Clients
+  Gui, Main:Add, Groupbox, yp+5 w126 h195, Manage Routers
+  Gui, Main:Add, Button, xp+3 yp+20 w120 gWinbox, Winbox Session
+  Gui, Main:Add, Button, yp+25 w120 gPutty, SSH Session
   Gui, Main:Add, Button, yp+25 w120 gCommand, Run Command
-  Gui, Main:Add, Button, yp+25 w120 gFirmware, Update Firmware
   Gui, Main:Add, Button, yp+25 w120 gRouterOS, Update RouterOS
+  Gui, Main:Add, Button, yp+25 w120 gFirmware, Update Firmware
   Gui, Main:Add, Button, yp+25 w120 gBackup, Run Manual Backup
   Gui, Main:Add, Button, yp+25 w120 gReboot, Reboot
-  Gui, Main:Add, Button, yp+25 w120 gWinbox, Winbox Session
-  Gui, Main:Add, Button, yp+25 w120 gPutty, SSH Session
-  Gui, Main:Add, Button, yp+25 w120 gCopyHost, Copy Hostname
-  Gui, Main:Add, ListView, yp-210 xp+125 w865 h735, Name|Hostname|Backup Status|OS Version|uid|Group
+  Gui, Main:Add, Groupbox, xp-3 yp+30 w126 h70, Copy Info
+  Gui, Main:Add, Button, xp+3 yp+20 w120 gCopyHost, Copy Hostname
+  Gui, Main:Add, Button, yp+25 w120 gCopyPass, Copy Password
+  Gui, Main:Add, Groupbox, xp-3 yp+30 w126 h45, Settings
+  Gui, Main:Add, Button, xp+3 yp+20 w120 gEdit, Edit Clients
+  
+  Gui, Main:Add, ListView, yp-295 xp+125 w865 h735 gRouterList, Name|Hostname|Backup Status|OS Version|uid|Group
   OpenDB()
   Devices.GetTable("SELECT * FROM tb_devices;", table)
   canIterate := true
@@ -327,6 +331,22 @@ CopyHost:
     MsgBox, Hostname has been copied to clipboard.
   }
   return
+CopyPass:
+  RowNumber := 0
+  loop % LV_GetCount("S")
+  {
+    if not RowNumber
+    {
+      Rownumber := 0
+    }
+    RowNumber := LV_GetNext(RowNumber)
+    LV_GetText(uid, RowNumber, 5)
+    password := GetCreds("password", uid)
+    writeLog("has copied the password for " . hostname . "to their clipboard", "INFO")
+    clipboard := password
+    MsgBox, password has been copied to clipboard.
+  }
+  return
 Add:
   toAdd := []
   GuiControlGet, Name
@@ -561,6 +581,12 @@ Quit:
   Gui, Edit:Destroy
   Gosub, DrawMain
   return
+RouterList:
+  if A_GuiEvent = DoubleClick
+  {
+    Goto, winbox
+  }
+  return
 return
 
 EditGuiClose:
@@ -673,6 +699,8 @@ AutoRun(command, targetGroup := -1)
       }
       else if (command = checkROS)
       {
+        SingleCommand(uid, "/system package update check-for-updates")
+        Sleep 500
         SingleCommand(uid, "/system package update install")
       }
     }
